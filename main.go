@@ -56,55 +56,59 @@ func main() {
 		//For ResultFilter
 		cli.BoolFlag{
 			Name:  "all, a",
-			Usage: "Usage a - ignore others",
+			Usage: "Show all (ignores all other filters)",
 		},
 		cli.BoolFlag{
-			Name:  "title, t",
-			Usage: "Usage t",
+			Name:  "title, ft",
+			Usage: "Filter the output by Title",
 		},
 		cli.BoolFlag{
-			Name:  "year, y",
-			Usage: "Usage y",
+			Name:  "year, fy",
+			Usage: "Filter the output by Year",
 		},
 		cli.BoolFlag{
-			Name:  "released, r",
-			Usage: "Usage r",
+			Name:  "released, fr",
+			Usage: "Filter the output by Released",
 		},
 		cli.BoolFlag{
-			Name:  "duration, z",
-			Usage: "Usage z",
+			Name:  "duration, fz",
+			Usage: "Filter the output by Duration",
 		},
 		cli.BoolFlag{
-			Name:  "summary, k",
-			Usage: "Usage k",
+			Name:  "summary, fk",
+			Usage: "Filter the output by Summary",
 		},
 		cli.BoolFlag{
-			Name:  "directors, d",
-			Usage: "Usage d",
+			Name:  "directors, fd",
+			Usage: "Filter the output by Directors",
 		},
 		cli.BoolFlag{
-			Name:  "writers, w",
-			Usage: "Usage w",
+			Name:  "writers, fw",
+			Usage: "Filter the output by Writers",
 		},
 		cli.BoolFlag{
-			Name:  "stars, p",
-			Usage: "Usage p",
+			Name:  "stars, fp",
+			Usage: "Filter the output by Stars",
 		},
 		cli.BoolFlag{
-			Name:  "genres, g",
-			Usage: "Usage s",
+			Name:  "genres, fg",
+			Usage: "Filter the output by Genres",
 		},
 		cli.BoolFlag{
-			Name:  "tagline, T",
-			Usage: "Usage T",
+			Name:  "tagline, fT",
+			Usage: "Filter the output by Tagline",
 		},
 		cli.BoolFlag{
-			Name:  "summaries, S",
-			Usage: "Usage S",
+			Name:  "summaries, fS",
+			Usage: "Filter the output by Summaries",
 		},
 		cli.BoolFlag{
-			Name:  "parental, P",
-			Usage: "Usage P",
+			Name:  "keywords, fK",
+			Usage: "Filter the output by Keywords",
+		},
+		cli.BoolFlag{
+			Name:  "parental, fP",
+			Usage: "Filter the output by Parental",
 		},
 	}
 	app.Action = func(c *cli.Context) error {
@@ -162,6 +166,10 @@ func main() {
 			filter.ParentsGuide = true
 			leastOne = true
 		}
+		if c.Bool("keywords") {
+			filter.Keywords = true
+			leastOne = true
+		}
 		if c.Bool("all") {
 			filter.Title = true
 			filter.Year = true
@@ -175,6 +183,7 @@ func main() {
 			filter.Genres = true
 			filter.Tagline = true
 			filter.Summaries = true
+			filter.Keywords = true
 			filter.ParentsGuide = true
 		} else {
 			if !leastOne {
@@ -189,7 +198,8 @@ func main() {
 				filter.Stars = true
 				filter.Genres = true
 				filter.Tagline = true
-				filter.Summaries = true
+				filter.Summaries = false
+				filter.Keywords = true
 				filter.ParentsGuide = true
 			}
 		}

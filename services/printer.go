@@ -86,6 +86,14 @@ func (p *Printer) printFullMovie(movie models.Movie) {
 	}
 	if p.Filter.Summaries {
 		p.printInfo("Summaries: ", string(movie.PS.Total))
+		for i := range movie.PS.Summaries {
+			fmt.Println()
+			p.printInfo(movie.PS.Summaries[i].Author, movie.PS.Summaries[i].Text)
+		}
+	}
+	if p.Filter.Keywords {
+		sums := movie.PK.Keywords[0:10]
+		p.printInfo("Keywords: ", strings.Join(sums, ", "))
 	}
 	if p.Filter.ParentsGuide {
 		p.printInfo("ParentsGuide: ", "")
@@ -137,13 +145,13 @@ func (p *Printer) printForRate(rate string) {
 		if p.Filter.NoColor {
 			fmt.Printf("NONE\n")
 		} else {
-			fmt.Printf("%s%s%s\n", blackOnWhite, "NONE", chalk.Reset)
+			fmt.Printf("%s% 3s%s\n", blackOnWhite, "NONE", chalk.Reset)
 		}
 	case "Mild":
 		if p.Filter.NoColor {
 			fmt.Printf("MILD\n")
 		} else {
-			fmt.Printf("%s%s%s\n", blackOnGreen, "MILD", chalk.Reset)
+			fmt.Printf("%s% 3s%s\n", blackOnGreen, "MILD", chalk.Reset)
 		}
 	case "Moderate":
 		if p.Filter.NoColor {

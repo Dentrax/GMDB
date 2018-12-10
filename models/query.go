@@ -22,6 +22,7 @@ type ResultFilter struct {
 	Genres       bool
 	Tagline      bool
 	Summaries    bool
+	Keywords     bool
 	ParentsGuide bool
 }
 
