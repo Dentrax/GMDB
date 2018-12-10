@@ -8,27 +8,24 @@
 package models
 
 type MovieInfo struct {
-	Title string
-	Year  string
-
-	Rating string
-	Votes  string
-
-	Genres []string
-
-	Duration string
-	Released string
-
-	Summary string
-
-	Credit CreditInfo
+	Title             string
+	Year              string
+	Rating            string
+	Votes             string
+	Genres            []string
+	Duration          string
+	Released          string
+	Summary           string
+	Credit            CreditInfo
+	Metascore         string
+	ReviewCountUser   string
+	ReviewCountCritic string
 }
 
 type Movie struct {
 	Info MovieInfo
-
-	TL Tagline
-	PS PlotSummary
-	PK PlotKeywords
-	PG ParentsGuide
+	TL   Tagline
+	PS   PlotSummary
+	PK   PlotKeywords
+	PG   ParentsGuide
 }

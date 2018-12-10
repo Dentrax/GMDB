@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"unicode/utf8"
 
 	"gmdb/models"
 
@@ -123,10 +124,15 @@ func GetDocumentFromFile(filename string) *goquery.Document {
 		log.Fatal(e)
 		return nil
 	}
+
 	defer file.Close()
 	doc, err := goquery.NewDocumentFromReader(file)
 	if err != nil {
 		log.Fatal(e)
+		return nil
+	}
+	if !utf8.ValidString(doc.Text()) {
+		log.Fatalf("DOC: %s", "NOT UTF-8 FORMAT")
 		return nil
 	}
 	return doc

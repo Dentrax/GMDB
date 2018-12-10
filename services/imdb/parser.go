@@ -27,7 +27,7 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 		title := s.Find(".titleBar .title_wrapper > h1").Not("span")
 		year := s.Find(".titleBar .title_wrapper > h1").Children()
 
-		duration := s.Find(".subtext").Children().First().Next()
+		duration := s.Find(".subtext > time")
 		releaseDate := s.Find(".subtext").Children().Last()
 
 		s.Find("div > a").Each(func(j int, l *goquery.Selection) {
@@ -37,20 +37,22 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 			}
 		})
 
-		movieInfo.Title = strings.TrimSpace(title.Text())
-		movieInfo.Year = strings.TrimSpace(year.Text())
+		//TODO: add Metascore, ReviewCountUser, ReviewCountCritic
 
-		movieInfo.Rating = strings.TrimSpace(stars.Text())
-		movieInfo.Votes = strings.TrimSpace(rated.Text())
+		movieInfo.Title = FixSpace(title.Text())
+		movieInfo.Year = FixSpace(year.Text())
 
-		movieInfo.Duration = strings.TrimSpace(duration.Text())
-		movieInfo.Released = strings.TrimSpace(releaseDate.Text())
+		movieInfo.Rating = FixSpace(stars.Text())
+		movieInfo.Votes = FixSpace(rated.Text())
+
+		movieInfo.Duration = FixSpace(duration.Text())
+		movieInfo.Released = FixSpace(releaseDate.Text())
 
 	})
 
 	doc.Find("div > div > div > div .plot_summary_wrapper .summary_text").Each(func(i int, s *goquery.Selection) {
 		summary := s.First()
-		movieInfo.Summary = strings.TrimSpace(summary.Text())
+		movieInfo.Summary = FixSpace(summary.Text())
 	})
 
 	creditInfo := new(models.CreditInfo)
@@ -60,7 +62,7 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 		s.Find("a").Each(func(j int, l *goquery.Selection) {
 			links, _ := l.Attr("href")
 			if strings.HasPrefix(links, "/name") {
-				name := strings.TrimSpace(l.Text())
+				name := FixSpace(l.Text())
 				if c == 0 {
 					creditInfo.Directors = append(creditInfo.Directors, name)
 				}
@@ -80,13 +82,21 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 	return movieInfo
 }
 
+func FixSpace(input string) string {
+	fix1 := strings.TrimSpace(input)
+	fix2 := strings.Replace(fix1, " ", " ", -1)
+	return fix2
+}
+
 func ParseTagline(doc *goquery.Document) *models.Tagline {
 	tagLine := new(models.Tagline)
 
 	doc.Find("div > div > div").ChildrenFiltered("div").Each(func(i int, s *goquery.Selection) {
 		if s.HasClass("soda odd") || s.HasClass("soda even") {
-			curr := strings.TrimSpace(s.Text())
-			tagLine.Tags = append(tagLine.Tags, curr)
+			curr := FixSpace(s.Text())
+			if !strings.Contains(curr, "we don't have any") {
+				tagLine.Tags = append(tagLine.Tags, curr)
+			}
 		}
 	})
 
@@ -98,8 +108,10 @@ func ParsePlotSummary(doc *goquery.Document) *models.PlotSummary {
 
 	c := uint(0)
 	doc.Find("div > div > section > ul .ipl-zebra-list__item ").Each(func(i int, s *goquery.Selection) {
-		text := strings.TrimSpace(s.Find("p").Text())
-		author := strings.TrimSpace(s.Find("em").Text())
+		c++
+		text := FixSpace(s.Find("p").Text())
+		author := FixSpace(s.Find("em").Text())
+		author = strings.Replace(author, "—", "", -1)
 
 		summary := models.Summary{
 			Author: author,
@@ -107,7 +119,6 @@ func ParsePlotSummary(doc *goquery.Document) *models.PlotSummary {
 		}
 
 		plotSummary.Summaries = append(plotSummary.Summaries, summary)
-		c++
 	})
 
 	plotSummary.Total = c
@@ -119,7 +130,7 @@ func ParsePlotKeywords(doc *goquery.Document) *models.PlotKeywords {
 
 	c := uint(0)
 	doc.Find("div > div > div > table > tbody .sodatext").Each(func(i int, s *goquery.Selection) {
-		curr := strings.TrimSpace(s.Text())
+		curr := FixSpace(s.Text())
 		plotKeywords.Keywords = append(plotKeywords.Keywords, curr)
 		c++
 	})
@@ -145,27 +156,28 @@ func ParseParentsGuide(doc *goquery.Document) *models.ParentsGuide {
 
 	doc.Find("div > div > section").ChildrenFiltered("section").Find("span").Each(func(i int, s *goquery.Selection) {
 		if s.HasClass("ipl-status-pill") {
-			curr := strings.TrimSpace(s.Text())
+			curr := FixSpace(s.Text())
+			curr = strings.ToUpper(curr)
 			//fmt.Printf("C: %d, Data: %s \n", c, curr)
 			if c == 0 {
-				rates.Nudity.FinalRate = curr
+				rates.Nudity.FinalRate = GetRateOrEmpty(curr)
 			}
 			if c == 2 {
-				rates.Violence.FinalRate = curr
+				rates.Violence.FinalRate = GetRateOrEmpty(curr)
 			}
 			if c == 4 {
-				rates.Profanity.FinalRate = curr
+				rates.Profanity.FinalRate = GetRateOrEmpty(curr)
 			}
 			if c == 6 {
-				rates.Alcohol.FinalRate = curr
+				rates.Alcohol.FinalRate = GetRateOrEmpty(curr)
 			}
 			if c == 8 {
-				rates.Frightening.FinalRate = curr
+				rates.Frightening.FinalRate = GetRateOrEmpty(curr)
 			}
 			c++
 		}
 		if s.HasClass("ipl-vote-button__details") {
-			curr := string(strings.TrimSpace(s.Text()))
+			curr := string(FixSpace(s.Text()))
 
 			data, err := strconv.ParseUint(curr, 10, 32)
 
@@ -188,9 +200,22 @@ func ParseParentsGuide(doc *goquery.Document) *models.ParentsGuide {
 		}
 	})
 
+	//TODO: Find better solution for empty PG areas
+	if c <= 5 {
+		rates.Alcohol.FinalRate = "EMPTY"
+		rates.Frightening.FinalRate = "EMPTY"
+	}
+
 	//fmt.Println(rts[3][1])
 
 	//fmt.Printf("N: %d, V: %d, P: %d, A: %d, F: %d", rates.Nudity, rates.Violence, rates.Profanity, rates.Alcohol, rates.Frightening)
 
 	return rates
+}
+
+func GetRateOrEmpty(rate string) string {
+	if len(FixSpace(rate)) < 4 || rate == "" {
+		return "EMPTY"
+	}
+	return rate
 }
