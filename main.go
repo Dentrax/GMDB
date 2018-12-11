@@ -8,8 +8,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gmdb/models"
@@ -31,6 +33,65 @@ func main() {
 	app.ArgsUsage = "[args and such]"
 	app.HideHelp = false
 	app.HideVersion = false
+	app.Commands = []cli.Command{
+		cli.Command{
+			Name:        "search",
+			Usage:       "usg",
+			UsageText:   "usg text",
+			Description: "desc",
+			ArgsUsage:   "[arg]",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "Search all supported sites (ignore others)",
+				},
+				cli.BoolFlag{
+					Name:  "imdb, i",
+					Usage: "Search in IMDB",
+				},
+				cli.BoolFlag{
+					Name:  "rottentomatoes, rt",
+					Usage: "Search in RottenTomatoes",
+				},
+			},
+			Action: func(c *cli.Context) error {
+
+				searchRequest := new(models.SearchRequest)
+
+				if c.Bool("imdb") {
+					searchRequest.ScanIMDB = true
+				}
+
+				if c.Bool("rottentomatoes") {
+					searchRequest.ScanRT = true
+				}
+
+				if len(c.Args()) > 0 {
+					searchRequest.Title = strings.Join(c.Args(), "+")
+
+					DefaultPrinter = services.NewSearchPrinter(*searchRequest)
+					DefaultPrinter.PrintSearchResponse()
+
+					scanner := bufio.NewScanner(os.Stdin)
+					fmt.Printf("Please select your choice: ")
+					scanner.Scan()
+					text := scanner.Text()
+
+					fmt.Println(text)
+				} else {
+					return cli.NewExitError("No keywords provided", 1)
+				}
+
+				return nil
+			},
+			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
+				fmt.Fprintf(c.App.Writer, "Wrong usage: %q \n", err)
+				return err
+			},
+		},
+		//DefaultPrinter = services.New(filter, c.String("url"), "test")
+		//DefaultPrinter.GetPrint()
+	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "url, u",
@@ -112,6 +173,10 @@ func main() {
 		},
 	}
 	app.Action = func(c *cli.Context) error {
+		if len(c.Args()) == 0 {
+			cli.ShowAppHelpAndExit(c, 1)
+		}
+
 		filter := models.ResultFilter{}
 		leastOne := false
 		if c.Bool("title") {
@@ -217,15 +282,11 @@ func main() {
 			filter.NoColor = true
 		}
 
-		DefaultPrinter = services.New(filter, c.String("url"), "test")
-		DefaultPrinter.GetPrint()
-
 		return nil
 	}
 	app.CommandNotFound = func(c *cli.Context, command string) {
 		fmt.Fprintf(c.App.Writer, "Wrong command: %q \n", command)
 	}
-
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
