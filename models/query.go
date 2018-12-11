@@ -30,17 +30,25 @@ type SearchRequest struct {
 	Title       string
 	Year        string
 	ID          string
+	URL         string
 	ExactSearch bool
+	ResultLimit int
+	ScanIMDB    bool
+	ScanRT      bool
 }
 
 type SearchResult struct {
-	Title string
-	Year  string
-	ID    string
+	URL    string
+	ID     string
+	Title  string
+	Year   string
+	TVShow bool
 }
 
 type SearchResponse struct {
-	Searches   []SearchResponse
+	Searches   []SearchResult
 	Error      string
 	TotalFound uint
+	IMDBCount  uint
+	RTCount    uint
 }
