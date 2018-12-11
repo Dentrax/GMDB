@@ -14,31 +14,61 @@ import (
 	"strings"
 
 	"gmdb/models"
+	"gmdb/services/imdb"
+	//	"gmdb/services/rottentomatoes"
 
 	"github.com/ttacon/chalk"
-	"gmdb/services/imdb"
 )
 
 type Printer struct {
-	Filter models.ResultFilter
-	URL    string
-	ID     string
+	Filter  models.ResultFilter
+	Request models.SearchRequest
 }
 
-func New(filter models.ResultFilter, url string, id string) *Printer {
+func New(filter models.ResultFilter, request models.SearchRequest) *Printer {
 	return &Printer{
-		Filter: filter,
-		URL:    url,
-		ID:     id,
+		Filter:  filter,
+		Request: request,
+	}
+}
+
+func NewSearchPrinter(request models.SearchRequest) *Printer {
+	return &Printer{
+		Filter:  models.ResultFilter{},
+		Request: request,
+	}
+}
+
+func (p *Printer) PrintSearchResponse() {
+	response := imdb.New("IMDB", p.Request)
+	res := response.SearchMovie(&p.Request)
+
+	if res == nil {
+		log.Fatalln("nil")
+	}
+
+	for i := range res.Searches[:10] {
+		fmt.Printf("%2d) ", i+1)
+		p.printInfo(res.Searches[i].Title, res.Searches[i].Year)
+	}
+
+	count := len(res.Searches)
+	if count > 10 {
+		moreCount := len(res.Searches) - 10
+		fmt.Printf("%2d) ", 0)
+		p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
 	}
 }
 
 func (p *Printer) GetPrint() {
 
+	//test := rottentomatoes.New("RottenTomatoes", "https://www.rottentomatoes.com")
+	//test.GetMovie()
+
 	r, _ := regexp.Compile("^(?i)(https?)://(www.imdb.com/title/)(tt(\\d)).*$")
 
-	if r.MatchString(strings.TrimSpace(p.URL)) && !strings.HasSuffix(p.URL, "/") {
-		cl := imdb.New("IMDB", p.URL)
+	if r.MatchString(strings.TrimSpace(p.Request.URL)) && !strings.HasSuffix(p.Request.URL, "/") {
+		cl := imdb.New("IMDB", p.Request)
 		res, err := cl.GetMovie()
 		if err != nil {
 			log.Fatalln("nil")
@@ -141,25 +171,31 @@ func (p *Printer) printForRate(rate string) {
 		WithTextStyle(chalk.Bold)
 
 	switch rate {
+	case "EMPTY":
+		if p.Filter.NoColor {
+			fmt.Printf("EMPTY\n")
+		} else {
+			fmt.Printf("%s%s%s\n", blackOnWhite, "EMPTY", chalk.Reset)
+		}
 	case "NONE":
 		if p.Filter.NoColor {
 			fmt.Printf("NONE\n")
 		} else {
-			fmt.Printf("%s% 3s%s\n", blackOnWhite, "NONE", chalk.Reset)
+			fmt.Printf("%s%s%s\n", blackOnWhite, "NONE", chalk.Reset)
 		}
-	case "Mild":
+	case "MILD":
 		if p.Filter.NoColor {
 			fmt.Printf("MILD\n")
 		} else {
-			fmt.Printf("%s% 3s%s\n", blackOnGreen, "MILD", chalk.Reset)
+			fmt.Printf("%s%s%s\n", blackOnGreen, "MILD", chalk.Reset)
 		}
-	case "Moderate":
+	case "MODERATE":
 		if p.Filter.NoColor {
 			fmt.Printf("MODERATE\n")
 		} else {
 			fmt.Printf("%s%s%s\n", blackOnYellow, "MODERATE", chalk.Reset)
 		}
-	case "Severe":
+	case "SEVERE":
 		if p.Filter.NoColor {
 			fmt.Printf("SEVERE\n")
 		} else {

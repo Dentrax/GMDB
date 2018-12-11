@@ -9,6 +9,7 @@ package imdb
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -16,6 +17,34 @@ import (
 
 	"github.com/puerkitobio/goquery"
 )
+
+func ParseSearchMovies(doc *goquery.Document) *models.SearchResponse {
+	result := new(models.SearchResponse)
+	finder := doc.Find("div.findSection td.result_text")
+
+	rgxURL, _ := regexp.Compile("(tt.*?)\\w+")
+
+	if len(finder.Nodes) > 0 {
+		doc.Find("div.findSection td.result_text").Each(func(i int, s *goquery.Selection) {
+			node := s.Find("a")
+			title := FixSpace(node.Text())
+			url, ok := node.Attr("href")
+			if ok {
+				item := models.SearchResult{
+					ID:     rgxURL.FindString(FixSpace(url)),
+					Title:  title,
+					Year:   FixSpace(strings.Replace(s.Text(), title, "", -1)),
+					TVShow: false,
+				}
+				result.Searches = append(result.Searches, item)
+			}
+		})
+	}
+
+	result.IMDBCount = uint(len(finder.Nodes))
+
+	return result
+}
 
 func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 	movieInfo := new(models.MovieInfo)
@@ -83,9 +112,10 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 }
 
 func FixSpace(input string) string {
-	fix1 := strings.TrimSpace(input)
-	fix2 := strings.Replace(fix1, " ", " ", -1)
-	return fix2
+	input = strings.Replace(input, "<br> \n", "", -1)
+	input = strings.TrimSpace(input)
+	input = strings.Replace(input, " ", " ", -1)
+	return input
 }
 
 func ParseTagline(doc *goquery.Document) *models.Tagline {

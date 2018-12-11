@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"gmdb/models"
+	"gmdb/services/common"
 )
 
 const PATH_TEST = "../../testdata/"
@@ -96,7 +97,7 @@ func TestParseMovieInfo(t *testing.T) {
 		}
 		defer fileHome.Close()
 
-		info := ParseMovieInfo(GetDocumentFromFile(currentTestHome))
+		info := ParseMovieInfo(services.GetDocumentFromFile(currentTestHome))
 
 		testName := strings.ToUpper(data.FolderName)
 
@@ -216,7 +217,7 @@ func TestParseTagline(t *testing.T) {
 		}
 		defer file.Close()
 
-		info := ParseTagline(GetDocumentFromFile(currentTestFile))
+		info := ParseTagline(services.GetDocumentFromFile(currentTestFile))
 
 		testName := strings.ToUpper(data.FolderName)
 
@@ -279,7 +280,7 @@ func TestParsePlotSummary(t *testing.T) {
 		}
 		defer file.Close()
 
-		info := ParsePlotSummary(GetDocumentFromFile(currentTestFile))
+		info := ParsePlotSummary(services.GetDocumentFromFile(currentTestFile))
 
 		testName := strings.ToUpper(data.FolderName)
 
@@ -366,7 +367,7 @@ func TestParsePlotKeywords(t *testing.T) {
 		}
 		defer file.Close()
 
-		info := ParsePlotKeywords(GetDocumentFromFile(currentTestFile))
+		info := ParsePlotKeywords(services.GetDocumentFromFile(currentTestFile))
 
 		testName := strings.ToUpper(data.FolderName)
 
@@ -434,7 +435,7 @@ func TestParseParentsGuide(t *testing.T) {
 		}
 		defer file.Close()
 
-		info := ParseParentsGuide(GetDocumentFromFile(currentTestFile))
+		info := ParseParentsGuide(services.GetDocumentFromFile(currentTestFile))
 
 		testName := strings.ToUpper(data.FolderName)
 
