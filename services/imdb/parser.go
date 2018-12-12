@@ -23,6 +23,7 @@ func ParseSearchMovies(doc *goquery.Document) *models.SearchResponse {
 	finder := doc.Find("div.findSection td.result_text")
 
 	rgxURL, _ := regexp.Compile("(tt.*?)\\w+")
+	rgxTITLE, _ := regexp.Compile("\\(([^()]*)\\)")
 
 	if len(finder.Nodes) > 0 {
 		doc.Find("div.findSection td.result_text").Each(func(i int, s *goquery.Selection) {
@@ -33,7 +34,7 @@ func ParseSearchMovies(doc *goquery.Document) *models.SearchResponse {
 				item := models.SearchResult{
 					ID:     rgxURL.FindString(FixSpace(url)),
 					Title:  title,
-					Year:   FixSpace(strings.Replace(s.Text(), title, "", -1)),
+					Year:   rgxTITLE.FindString(FixSpace(strings.Replace(s.Text(), title, "", -1))),
 					TVShow: false,
 				}
 				result.Searches = append(result.Searches, item)
@@ -41,7 +42,7 @@ func ParseSearchMovies(doc *goquery.Document) *models.SearchResponse {
 		})
 	}
 
-	result.IMDBCount = uint(len(finder.Nodes))
+	result.TotalFound = uint(len(finder.Nodes))
 
 	return result
 }

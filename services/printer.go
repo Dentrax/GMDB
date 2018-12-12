@@ -9,13 +9,9 @@ package services
 
 import (
 	"fmt"
-	"log"
-	"regexp"
 	"strings"
 
 	"gmdb/models"
-	"gmdb/services/imdb"
-	"gmdb/services/rottentomatoes"
 
 	"github.com/ttacon/chalk"
 )
@@ -25,7 +21,7 @@ type Printer struct {
 	Request models.SearchRequest
 }
 
-func New(filter models.ResultFilter, request models.SearchRequest) *Printer {
+func NewPrinter(filter models.ResultFilter, request models.SearchRequest) *Printer {
 	return &Printer{
 		Filter:  filter,
 		Request: request,
@@ -39,80 +35,49 @@ func NewSearchPrinter(request models.SearchRequest) *Printer {
 	}
 }
 
-func (p *Printer) PrintSearchResponse() {
-	engineIMDB := imdb.New("IMDB", p.Request)
-	engineRT := rottentomatoes.New("RT", p.Request)
+func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, responses []models.SearchResponse) {
+	totalResponse := len(responses)
 
-	//Scan IMDB
-	var okIMDB = false
-	var resIMDB *models.SearchResponse
-	if p.Request.ScanIMDB {
-		resIMDB = engineIMDB.SearchMovie(&p.Request)
-		okIMDB = resIMDB != nil
-	}
+	if totalResponse > 0 {
+		for i := 0; i < totalResponse; i++ {
+			currEngine := responses[i].SearchEngine
+			totalResult := uint8(len(responses[i].Searches))
 
-	//Scan RT
-	var okRT = false
-	var resRT *models.SearchResponse
-	if p.Request.ScanRT {
-		resRT = engineRT.SearchMovie(&p.Request)
-		okRT = resRT != nil
-	}
-
-	counter := 0
-
-	if okIMDB {
-		if len(resIMDB.Searches) > 0 {
-			for i := range resIMDB.Searches[:10] {
-				fmt.Printf("%2d) ", counter+1)
-				p.printInfo(resIMDB.Searches[i].Title, resIMDB.Searches[i].Year)
-				counter++
-			}
-			if len(resIMDB.Searches) > 10 {
-				moreCount := len(resIMDB.Searches) - 10
-				fmt.Printf("%2d) ", 0)
-				p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
-			}
-		}
-	}
-
-	if okRT {
-		if len(resRT.Searches) > 0 {
-			for i := range resRT.Searches[:10] {
-				fmt.Printf("%2d) ", counter+1)
-				p.printInfo(resRT.Searches[i].Title, resRT.Searches[i].Year)
-				counter++
-			}
-			if len(resRT.Searches) > 10 {
-				moreCount := len(resRT.Searches) - 10
-				fmt.Printf("%2d) ", 0)
-				p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
+			if totalResult > 0 {
+				if max > totalResult {
+					max = totalResult
+				}
+				if min < 0 {
+					min = 0
+				}
+				if !isMore {
+					fmt.Printf("From %v: \n", currEngine)
+				}
+				filterCount := responses[i].Searches[min:max]
+				indexCounter := min
+				for j := range filterCount {
+					if isMore {
+						fmt.Printf("%2d) ", indexCounter+1)
+						p.printInfo(responses[i].Searches[indexCounter].Title, responses[i].Searches[indexCounter].Year)
+						indexCounter++
+					} else {
+						fmt.Printf("%2d) ", j+1)
+						p.printInfo(responses[i].Searches[j].Title, responses[i].Searches[j].Year)
+					}
+				}
+				if totalResult > max {
+					if totalResult > 10 {
+						moreCount := len(responses[i].Searches) - 10
+						fmt.Printf("%2d) ", 0)
+						p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
+					}
+				}
 			}
 		}
 	}
 }
 
-func (p *Printer) GetPrint() {
-
-	//test := rottentomatoes.New("RottenTomatoes", "https://www.rottentomatoes.com")
-	//test.GetMovie()
-
-	r, _ := regexp.Compile("^(?i)(https?)://(www.imdb.com/title/)(tt(\\d)).*$")
-
-	if r.MatchString(strings.TrimSpace(p.Request.URL)) && !strings.HasSuffix(p.Request.URL, "/") {
-		cl := imdb.New("IMDB", p.Request)
-		res, err := cl.GetMovie()
-		if err != nil {
-			log.Fatalln("nil")
-		}
-		p.printBanner()
-		p.printFullMovie(*res)
-	} else {
-		log.Fatalln("URL format MUST be in https://www.imdb.com/title/ttID and musn't end with '/'")
-	}
-}
-
-func (p *Printer) printFullMovie(movie models.Movie) {
+func (p *Printer) PrintMovie(movie models.Movie) {
 	if p.Filter.Title {
 		p.printInfo("Movie Name: ", movie.Info.Title)
 	}
@@ -154,7 +119,14 @@ func (p *Printer) printFullMovie(movie models.Movie) {
 		}
 	}
 	if p.Filter.Keywords {
-		sums := movie.PK.Keywords[0:10]
+		max := 10
+		count := len(movie.PK.Keywords)
+		if count > 10 {
+			max = 10
+		} else {
+			max = count
+		}
+		sums := movie.PK.Keywords[0:max]
 		p.printInfo("Keywords: ", strings.Join(sums, ", "))
 	}
 	if p.Filter.ParentsGuide {
