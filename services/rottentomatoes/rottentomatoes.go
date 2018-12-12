@@ -8,7 +8,7 @@
 package rottentomatoes
 
 import (
-	"fmt"
+	"log"
 
 	"gmdb/models"
 	"gmdb/services/common"
@@ -17,46 +17,60 @@ import (
 )
 
 type RottenTomatoes struct {
-	Name string
-	URL  string
+	Name    string
+	Request models.SearchRequest
 }
 
-func New(name string, url string) *RottenTomatoes {
+func New(name string, request models.SearchRequest) *RottenTomatoes {
 	return &RottenTomatoes{
-		Name: name,
-		URL:  url,
+		Name:    name,
+		Request: request,
 	}
+}
+
+func (s *RottenTomatoes) SearchMovie(request *models.SearchRequest) *models.SearchResponse {
+
+	url := "https://www.rottentomatoes.com" + "/search/?search=" + request.Title
+
+	log.Print(url)
+	rq, err := GetSearchMovies(services.GetDocumentFromURL(url))
+	//year, id\ exactsearch
+
+	if err != nil {
+		log.Fatalln("nil")
+	}
+
+	return rq
 }
 
 func (s *RottenTomatoes) GetMovie() (*models.Movie, error) {
 
-	url := s.URL + "/m/" + "ghostbusters_2016"
+	url := s.Request.URL
 
-	fmt.Println(url)
-	//movie := new(models.Movie)
+	movie := new(models.Movie)
 
 	//TODO: Optimization for spesific arguments
 
 	mi, err1 := GetMovieInfo(services.GetDocumentFromURL(url))
-	mo, err1 := GetMovieReviews(services.GetDocumentFromURL(url))
+	//mo, err1 := GetMovieReviews(services.GetDocumentFromURL(url))
 
 	if err1 != nil {
-		fmt.Println("nil")
+		log.Fatalln("nil")
 		return nil, nil
 	}
-	//movieName := strings.Replace(mname, " ", "_", -1)
 
-	//if len(year) == 4 {
-	//	urlis = urlis + "_" + year
-	//}
-	fmt.Println(mi)
-	fmt.Println(mo)
+	movie.Info = *mi
 
-	return nil, nil
+	return movie, nil
 }
 
-func GetMovieInfo(doc *goquery.Document) (string, error) {
-	info := ParseMovieScore(doc)
+func GetSearchMovies(doc *goquery.Document) (*models.SearchResponse, error) {
+	searches := ParseSearchMovies(doc)
+	return searches, nil
+}
+
+func GetMovieInfo(doc *goquery.Document) (*models.MovieInfo, error) {
+	info := ParseMovieInfo(doc)
 	return info, nil
 }
 

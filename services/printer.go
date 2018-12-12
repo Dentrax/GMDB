@@ -15,7 +15,7 @@ import (
 
 	"gmdb/models"
 	"gmdb/services/imdb"
-	//	"gmdb/services/rottentomatoes"
+	"gmdb/services/rottentomatoes"
 
 	"github.com/ttacon/chalk"
 )
@@ -40,23 +40,55 @@ func NewSearchPrinter(request models.SearchRequest) *Printer {
 }
 
 func (p *Printer) PrintSearchResponse() {
-	response := imdb.New("IMDB", p.Request)
-	res := response.SearchMovie(&p.Request)
+	engineIMDB := imdb.New("IMDB", p.Request)
+	engineRT := rottentomatoes.New("RT", p.Request)
 
-	if res == nil {
-		log.Fatalln("nil")
+	//Scan IMDB
+	var okIMDB = false
+	var resIMDB *models.SearchResponse
+	if p.Request.ScanIMDB {
+		resIMDB = engineIMDB.SearchMovie(&p.Request)
+		okIMDB = resIMDB != nil
 	}
 
-	for i := range res.Searches[:10] {
-		fmt.Printf("%2d) ", i+1)
-		p.printInfo(res.Searches[i].Title, res.Searches[i].Year)
+	//Scan RT
+	var okRT = false
+	var resRT *models.SearchResponse
+	if p.Request.ScanRT {
+		resRT = engineRT.SearchMovie(&p.Request)
+		okRT = resRT != nil
 	}
 
-	count := len(res.Searches)
-	if count > 10 {
-		moreCount := len(res.Searches) - 10
-		fmt.Printf("%2d) ", 0)
-		p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
+	counter := 0
+
+	if okIMDB {
+		if len(resIMDB.Searches) > 0 {
+			for i := range resIMDB.Searches[:10] {
+				fmt.Printf("%2d) ", counter+1)
+				p.printInfo(resIMDB.Searches[i].Title, resIMDB.Searches[i].Year)
+				counter++
+			}
+			if len(resIMDB.Searches) > 10 {
+				moreCount := len(resIMDB.Searches) - 10
+				fmt.Printf("%2d) ", 0)
+				p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
+			}
+		}
+	}
+
+	if okRT {
+		if len(resRT.Searches) > 0 {
+			for i := range resRT.Searches[:10] {
+				fmt.Printf("%2d) ", counter+1)
+				p.printInfo(resRT.Searches[i].Title, resRT.Searches[i].Year)
+				counter++
+			}
+			if len(resRT.Searches) > 10 {
+				moreCount := len(resRT.Searches) - 10
+				fmt.Printf("%2d) ", 0)
+				p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
+			}
+		}
 	}
 }
 
