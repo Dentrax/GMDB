@@ -141,11 +141,15 @@ func main() {
 										if len(text) == 0 || text == "y" || text == "Y" {
 											//watch
 											fmt.Printf("MPV Player loading...: %s", movie.Info.URLTrailerIMDB)
-											out, err := exec.Command("/usr/bin/mpv", movie.Info.URLTrailerIMDB).Output()
-											if err != nil {
+											cmd := exec.Command("/usr/bin/mpv", movie.Info.URLTrailerIMDB)
+											if err := cmd.Start(); err != nil {
+												fmt.Printf("Failed to start cmd: %v", err)
 												os.Exit(2)
 											}
-											fmt.Printf("%s\n\n", out)
+											if err := cmd.Wait(); err != nil {
+												fmt.Printf("Cmd returned error: %v", err)
+												os.Exit(2)
+											}
 										} else {
 											os.Exit(0)
 										}
