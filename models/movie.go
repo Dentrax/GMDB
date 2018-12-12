@@ -20,6 +20,8 @@ type MovieInfo struct {
 	Metascore         string
 	ReviewCountUser   string
 	ReviewCountCritic string
+	URLTrailerIMDB    string
+	URLPosterIMDB     string
 }
 
 type Movie struct {

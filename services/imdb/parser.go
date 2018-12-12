@@ -80,6 +80,18 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 
 	})
 
+	doc.Find("div > div > div > div .vital .slate_wrapper").Each(func(i int, s *goquery.Selection) {
+		slate := s.Find("div.slate")
+		urlTrailer, ok := slate.Find("a").Attr("data-video")
+
+		rgxURL, _ := regexp.Compile("(vi.*?)\\w+")
+
+		if ok {
+			id := rgxURL.FindString(FixSpace(urlTrailer))
+			movieInfo.URLTrailerIMDB = "https://www.imdb.com/videoplayer/" + id
+		}
+	})
+
 	doc.Find("div > div > div > div .plot_summary_wrapper .summary_text").Each(func(i int, s *goquery.Selection) {
 		summary := s.First()
 		movieInfo.Summary = FixSpace(summary.Text())
