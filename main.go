@@ -11,6 +11,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -69,20 +71,73 @@ func main() {
 				if len(c.Args()) > 0 {
 					searchRequest.Title = strings.Join(c.Args(), "+")
 
-					DefaultPrinter = services.NewSearchPrinter(*searchRequest)
-					DefaultPrinter.PrintSearchResponse()
+					//Initialize SearchEngine for Query
+					engine := *services.NewSearcher(*searchRequest)
 
-					scanner := bufio.NewScanner(os.Stdin)
+					//Get Responses from URLs
+					responses := engine.GetSearchResponses()
+
+					//Initialize Printer to print responses
+					DefaultPrinter = services.NewPrinter(NoFilter(), *searchRequest)
+
+					//Print the responses
+					//Start Index: 0
+					//End Index: 10
+					//ShowMore Selected: false
+					DefaultPrinter.PrintSearchResponses(0, 10, false, responses)
+
+					isShowMoreOptionSelected := false
+
 					fmt.Println("(Enter 'q' to exit.)")
-					fmt.Printf("Please select your choice: ")
-					scanner.Scan()
-					text := scanner.Text()
 
-					if text == "q" {
-						os.Exit(0)
+					for {
+						//Create a Scanner to get CLI input
+						scanner := bufio.NewScanner(os.Stdin)
+						fmt.Printf("Please select your choice: ")
+						scanner.Scan()
+						text := scanner.Text()
+
+						//Exit if given key is 'q'
+						if text == "q" {
+							os.Exit(0)
+						} else {
+							//Otherwise, check if it was in integer type
+							ok, _ := regexp.MatchString("(^[0-9]*$)", text)
+							if !ok {
+								fmt.Println("Invalid selection")
+								continue
+							} else {
+								if len(text) == 0 {
+									fmt.Println("Invalid selection")
+									continue
+								}
+								selected, _ := strconv.Atoi(text)
+								if selected == 0 {
+									isShowMoreOptionSelected = true
+									//Print the other results that didn't show first
+									//Start Index: 10
+									//End Index: 250
+									//ShowMore Selected: true
+									DefaultPrinter.PrintSearchResponses(10, 200, true, responses)
+									continue
+								} else if (!isShowMoreOptionSelected && selected > 0 && selected <= 10) || (isShowMoreOptionSelected && selected > 0 && selected <= 200) {
+									fmt.Println("\nGetting information...\n")
+
+									//Get the movie info from IMDB
+									movie := engine.GetMovie("IMDB", responses[0].Searches[selected-1])
+
+									//Print the movie info that we had get above
+									DefaultPrinter.PrintMovie(*movie)
+
+									//Success
+									os.Exit(0)
+								} else {
+									fmt.Println("Invalid selection")
+									continue
+								}
+							}
+						}
 					}
-
-					fmt.Println(text)
 				} else {
 					return cli.NewExitError("No keywords provided", 1)
 				}
@@ -94,8 +149,6 @@ func main() {
 				return err
 			},
 		},
-		//DefaultPrinter = services.New(filter, c.String("url"), "test")
-		//DefaultPrinter.GetPrint()
 	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -295,5 +348,24 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+}
+
+func NoFilter() models.ResultFilter {
+	return models.ResultFilter{
+		Title:        true,
+		Year:         true,
+		Released:     true,
+		Rating:       true,
+		Duration:     true,
+		Summary:      true,
+		Directors:    true,
+		Writers:      true,
+		Stars:        true,
+		Genres:       true,
+		Tagline:      true,
+		Summaries:    false,
+		Keywords:     true,
+		ParentsGuide: true,
 	}
 }
