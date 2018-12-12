@@ -46,9 +46,8 @@ type SearchResult struct {
 }
 
 type SearchResponse struct {
-	Searches   []SearchResult
-	Error      string
-	TotalFound uint
-	IMDBCount  uint
-	RTCount    uint
+	SearchEngine string
+	Searches     []SearchResult
+	Error        string
+	TotalFound   uint
 }
