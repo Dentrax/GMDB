@@ -50,7 +50,7 @@ func main() {
 					Usage: "Search in IMDB",
 				},
 				cli.BoolFlag{
-					Name:  "rottentomatoes, rt",
+					Name:  "rottentomatoes, r",
 					Usage: "Search in RottenTomatoes",
 				},
 			},
@@ -73,9 +73,14 @@ func main() {
 					DefaultPrinter.PrintSearchResponse()
 
 					scanner := bufio.NewScanner(os.Stdin)
+					fmt.Println("(Enter 'q' to exit.)")
 					fmt.Printf("Please select your choice: ")
 					scanner.Scan()
 					text := scanner.Text()
+
+					if text == "q" {
+						os.Exit(0)
+					}
 
 					fmt.Println(text)
 				} else {
