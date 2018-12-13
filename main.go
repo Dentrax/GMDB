@@ -8,16 +8,12 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"os/exec"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"gmdb/models"
+	"gmdb/pkg"
 	"gmdb/services"
 
 	"github.com/urfave/cli"
@@ -58,116 +54,11 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-
-				searchRequest := new(models.SearchRequest)
-
-				if c.Bool("imdb") {
-					searchRequest.ScanIMDB = true
-				}
-
-				if c.Bool("rottentomatoes") {
-					searchRequest.ScanRT = true
-				}
-
 				if len(c.Args()) > 0 {
-					searchRequest.Title = strings.Join(c.Args(), "+")
-
-					//Initialize SearchEngine for Query
-					engine := *services.NewSearcher(*searchRequest)
-
-					//Get Responses from URLs
-					responses := engine.GetSearchResponses()
-
-					//Initialize Printer to print responses
-					DefaultPrinter = services.NewPrinter(NoFilter(), *searchRequest)
-
-					//Print the responses
-					//Start Index: 0
-					//End Index: 10
-					//ShowMore Selected: false
-					DefaultPrinter.PrintSearchResponses(0, 10, false, responses)
-
-					isShowMoreOptionSelected := false
-
-					fmt.Println("(Enter 'q' to exit.)")
-
-					for {
-						//Create a Scanner to get CLI input
-						scanner := bufio.NewScanner(os.Stdin)
-						fmt.Printf("Please select your choice: ")
-						scanner.Scan()
-						text := scanner.Text()
-
-						//Exit if given key is 'q'
-						if text == "q" {
-							os.Exit(0)
-						} else {
-							//Otherwise, check if it was in integer type
-							ok, _ := regexp.MatchString("(^[0-9]*$)", text)
-							if !ok {
-								fmt.Println("Invalid selection")
-								continue
-							} else {
-								if len(text) == 0 {
-									fmt.Println("Invalid selection")
-									continue
-								}
-								selected, _ := strconv.Atoi(text)
-								if selected == 0 {
-									isShowMoreOptionSelected = true
-									//Print the other results that didn't show first
-									//Start Index: 10
-									//End Index: 250
-									//ShowMore Selected: true
-									DefaultPrinter.PrintSearchResponses(10, 200, true, responses)
-									continue
-								} else if (!isShowMoreOptionSelected && selected > 0 && selected <= 10) || (isShowMoreOptionSelected && selected > 0 && selected <= 200) {
-									fmt.Println("\nGetting information...\n")
-
-									//Get the movie info from IMDB
-									//TODO: Add multiple search engine instead of only IMDB
-									movie := engine.GetMovie("IMDB", responses[0].Searches[selected-1])
-
-									//Print the movie info that we had get above
-									DefaultPrinter.PrintMovie(*movie)
-
-									if len(movie.Info.URLTrailerIMDB) > 0 {
-										fmt.Println()
-										fmt.Printf("%s [Y/n]: ", "Do you want to watch Trailer now?")
-
-										scanner.Scan()
-										text := scanner.Text()
-
-										if len(text) == 0 || text == "y" || text == "Y" {
-											//watch
-											fmt.Printf("MPV Player loading...: %s", movie.Info.URLTrailerIMDB)
-											cmd := exec.Command("/usr/bin/mpv", movie.Info.URLTrailerIMDB)
-											if err := cmd.Start(); err != nil {
-												fmt.Printf("Failed to start cmd: %v", err)
-												os.Exit(2)
-											}
-											if err := cmd.Wait(); err != nil {
-												fmt.Printf("Cmd returned error: %v", err)
-												os.Exit(2)
-											}
-										} else {
-											os.Exit(0)
-										}
-									}
-
-									//Success
-									os.Exit(0)
-								} else {
-									fmt.Println("Invalid selection")
-									continue
-								}
-							}
-						}
-					}
+					gmdb.HandleSearchTitleRequest(c)
 				} else {
 					return cli.NewExitError("No keywords provided", 1)
 				}
-
 				return nil
 			},
 			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
@@ -374,24 +265,5 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
-	}
-}
-
-func NoFilter() models.ResultFilter {
-	return models.ResultFilter{
-		Title:        true,
-		Year:         true,
-		Released:     true,
-		Rating:       true,
-		Duration:     true,
-		Summary:      true,
-		Directors:    true,
-		Writers:      true,
-		Stars:        true,
-		Genres:       true,
-		Tagline:      true,
-		Summaries:    false,
-		Keywords:     true,
-		ParentsGuide: true,
 	}
 }
