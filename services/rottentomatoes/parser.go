@@ -46,8 +46,7 @@ func ParseSearchMovies(doc *goquery.Document) *models.SearchResponse {
 
 		resp.URL = info.URL
 		resp.Title = info.Name
-		resp.Year = string(info.Year)
-
+		resp.Year = fmt.Sprintf("(%v)", info.Year)
 		result.Searches = append(result.Searches, resp)
 	}
 

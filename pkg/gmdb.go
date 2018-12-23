@@ -113,12 +113,25 @@ func HandleSearchTitleRequest(c *cli.Context) {
 	searchRequest := new(models.SearchRequest)
 	searchRequest.Title = strings.Join(c.Args(), "+")
 
-	if c.Bool("imdb") {
+	flag := false
+	if c.Bool("all") {
+		searchRequest.ScanRT = true
 		searchRequest.ScanIMDB = true
+		flag = true
+	} else {
+		if c.Bool("imdb") {
+			searchRequest.ScanIMDB = true
+			flag = true
+		}
+		if c.Bool("rottentomatoes") {
+			searchRequest.ScanRT = true
+			flag = true
+		}
 	}
 
-	if c.Bool("rottentomatoes") {
-		searchRequest.ScanRT = true
+	if !flag {
+		//Default engine
+		searchRequest.ScanIMDB = true
 	}
 
 	//Initialize Printer to print responses
@@ -186,11 +199,16 @@ func HandleSearchTitleRequest(c *cli.Context) {
 			//TODO: Add multiple search engine instead of only IMDB
 			movie := new(models.Movie)
 
-			if c.Bool("imdb") {
+			if c.Bool("all") {
+				//FIXME: Default engine IMDB, make array? for all results?
 				movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])
-			}
-			if c.Bool("rottentomatoes") {
-				movie = engine.GetMovie("RottenTomatoes", responses[0].Searches[choice-1])
+			} else {
+				if c.Bool("imdb") {
+					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])
+				}
+				if c.Bool("rottentomatoes") {
+					movie = engine.GetMovie("RottenTomatoes", responses[0].Searches[choice-1])
+				}
 			}
 
 			//Add to cache if available

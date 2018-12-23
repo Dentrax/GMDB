@@ -52,6 +52,7 @@ func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, respon
 						WithBackground(chalk.Black).
 						WithTextStyle(chalk.Bold).
 						Style
+					fmt.Println()
 					fmt.Printf("From%v", " ")
 					fmt.Println(lime(currEngine))
 				}
