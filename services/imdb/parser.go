@@ -178,6 +178,9 @@ func ParsePlotKeywords(doc *goquery.Document) *models.PlotKeywords {
 		c++
 	})
 
+	if c > 10 {
+		plotKeywords.Keywords = plotKeywords.Keywords[:10]
+	}
 	plotKeywords.Total = c
 	return plotKeywords
 }
@@ -242,6 +245,8 @@ func ParseParentsGuide(doc *goquery.Document) *models.ParentsGuide {
 			}
 		}
 	})
+
+	rates.TotalVote = cTotal
 
 	//TODO: Find better solution for empty PG areas
 	if c <= 5 {

@@ -11,6 +11,7 @@ import (
 	"log"
 
 	"gmdb/models"
+	"gmdb/pkg/cache"
 	"gmdb/services/common"
 
 	"github.com/puerkitobio/goquery"
@@ -29,50 +30,50 @@ func New(name string, request models.SearchRequest) *IMDB {
 }
 
 func (s *IMDB) SearchMovie(request *models.SearchRequest) *models.SearchResponse {
-
 	url := "https://www.imdb.com/find?q=" + request.Title + "&s=tt"
 
-	rq, err := GetSearchMovies(services.GetDocumentFromURL(url))
-	//year, id\ exactsearch
+	if cache.IsFileExist(s.Name, "searches", request.Title) {
+		result, err := cache.GetSearchResponse(s.Name, "searches", request.Title)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return result
+	}
 
+	doc := services.GetDocumentFromURL(url)
+	result, err := GetSearchMovies(doc)
 	if err != nil {
 		log.Fatalln("nil")
 	}
-
-	return rq
+	return result
 }
 
 func (s *IMDB) GetMovie() (*models.Movie, error) {
+	if cache.IsFileExist(s.Name, "movies", s.Request.ID) {
+		result, err := cache.GetMovie(s.Name, "movies", s.Request.ID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return result, nil
+	}
+
+	movie := new(models.Movie)
 
 	urlTL := s.Request.URL + "/taglines"
 	urlPS := s.Request.URL + "/plotsummary"
 	urlPK := s.Request.URL + "/keywords"
 	urlPG := s.Request.URL + "/parentalguide"
 
-	movie := new(models.Movie)
+	//TODO: Optimization and err handling required immediately !!!
 
-	//TODO: Optimization for spesific arguments
+	mi, err := GetMovieInfo(services.GetDocumentFromURL(s.Request.URL))
 
-	mi, err1 := GetMovieInfo(services.GetDocumentFromURL(s.Request.URL))
+	tl, err := GetTagline(services.GetDocumentFromURL(urlTL))
+	ps, err := GetPlotSummary(services.GetDocumentFromURL(urlPS))
+	pk, err := GetPlotKeywords(services.GetDocumentFromURL(urlPK))
+	pg, err := GetParentsGuide(services.GetDocumentFromURL(urlPG))
 
-	tl, err2 := GetTagline(services.GetDocumentFromURL(urlTL))
-	ps, err3 := GetPlotSummary(services.GetDocumentFromURL(urlPS))
-	pk, err4 := GetPlotKeywords(services.GetDocumentFromURL(urlPK))
-	pg, err5 := GetParentsGuide(services.GetDocumentFromURL(urlPG))
-
-	if err1 != nil {
-		log.Fatalln("nil")
-	}
-	if err2 != nil {
-		log.Fatalln("nil")
-	}
-	if err3 != nil {
-		log.Fatalln("nil")
-	}
-	if err4 != nil {
-		log.Fatalln("nil")
-	}
-	if err5 != nil {
+	if err != nil {
 		log.Fatalln("nil")
 	}
 

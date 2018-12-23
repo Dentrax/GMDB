@@ -65,6 +65,7 @@ func (s *Searcher) GetSearchResponses() []models.SearchResponse {
 func (p *Searcher) GetMovie(engine string, response models.SearchResult) *models.Movie {
 	//	r, _ := regexp.Compile("^(?i)(https?)://(www.imdb.com/title/)(tt(\\d)).*$")
 	//	if r.MatchString(strings.TrimSpace(p.Request.URL)) && !strings.HasSuffix(p.Request.URL, "/") {
+
 	if engine == "IMDB" {
 		url := "https://www.imdb.com/title/" + response.ID
 
@@ -75,6 +76,23 @@ func (p *Searcher) GetMovie(engine string, response models.SearchResult) *models
 			URL:   url,
 		}
 		client := imdb.New("IMDB", request)
+		movieInfo, err := client.GetMovie()
+		if err != nil {
+			log.Fatalln("nil")
+		}
+		return movieInfo
+	}
+
+	if engine == "RottenTomatoes" {
+		url := "https://www.rottentomatoes.com/" + response.URL
+
+		request := models.SearchRequest{
+			Title: response.Title,
+			Year:  response.Year,
+			ID:    response.ID,
+			URL:   url,
+		}
+		client := rottentomatoes.New("RottenTomatoes", request)
 		movieInfo, err := client.GetMovie()
 		if err != nil {
 			log.Fatalln("nil")

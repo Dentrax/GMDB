@@ -12,6 +12,7 @@ type MovieInfo struct {
 	Year              string
 	Rating            string
 	Votes             string
+	Reviews           string
 	Genres            []string
 	Duration          string
 	Released          string
@@ -20,6 +21,7 @@ type MovieInfo struct {
 	Metascore         string
 	ReviewCountUser   string
 	ReviewCountCritic string
+	RTMeter           string
 	URLTrailerIMDB    string
 	URLPosterIMDB     string
 }

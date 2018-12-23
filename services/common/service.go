@@ -13,8 +13,41 @@ import (
 	"os"
 	"unicode/utf8"
 
+	"gmdb/pkg/cache"
+	"gmdb/pkg/config"
+
 	"github.com/puerkitobio/goquery"
 )
+
+func GetDocumentFile(service string, rootName string, title string, url string) *goquery.Document {
+	var doc *goquery.Document
+
+	if cache.IsFileExist(service, rootName, title) {
+		result, err := cache.GetFile(service, rootName, title)
+		if err != nil {
+			log.Fatal(err)
+		}
+		doc, err = goquery.NewDocumentFromReader(result.File)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return doc
+	}
+
+	doc = GetDocumentFromURL(url)
+
+	if config.Cache.UseCache {
+		if config.Cache.UseMovieCache {
+			str, err := doc.Html()
+			if err != nil {
+				log.Fatal(err)
+			}
+			cache.WriteFile(service, rootName, title, str)
+			//TODO: else timeout 1 day write
+		}
+	}
+	return doc
+}
 
 func GetDocumentFromURL(url string) *goquery.Document {
 	res, err := http.Get(url)
@@ -22,7 +55,6 @@ func GetDocumentFromURL(url string) *goquery.Document {
 		log.Fatal(err)
 		return nil
 	}
-
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
 		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)

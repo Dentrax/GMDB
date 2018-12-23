@@ -47,11 +47,13 @@ func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, respon
 				if max > totalResult {
 					max = totalResult
 				}
-				if min < 0 {
-					min = 0
-				}
 				if !isMore {
-					fmt.Printf("From %v: \n", currEngine)
+					lime := chalk.Yellow.NewStyle().
+						WithBackground(chalk.Black).
+						WithTextStyle(chalk.Bold).
+						Style
+					fmt.Printf("From%v", " ")
+					fmt.Println(lime(currEngine))
 				}
 				filterCount := responses[i].Searches[min:max]
 				indexCounter := min
@@ -78,47 +80,47 @@ func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, respon
 }
 
 func (p *Printer) PrintMovie(movie models.Movie) {
-	if p.Filter.Title {
+	if p.Filter.Title && len(movie.Info.Title) > 0 {
 		p.printInfo("Movie Name: ", movie.Info.Title)
 	}
-	if p.Filter.Year {
+	if p.Filter.Year && len(movie.Info.Year) > 0 {
 		p.printInfo("Year: ", movie.Info.Year)
 	}
-	if p.Filter.Released {
+	if p.Filter.Released && len(movie.Info.Released) > 0 {
 		p.printInfo("Released: ", movie.Info.Released)
 	}
-	if p.Filter.Rating {
+	if p.Filter.Rating && len(movie.Info.Rating) > 0 {
 		p.printInfo("Rating: ", movie.Info.Rating+" ("+movie.Info.Votes+")")
 	}
-	if p.Filter.Genres {
+	if p.Filter.Genres && len(movie.Info.Genres) > 0 {
 		p.printInfo("Genres: ", strings.Join(movie.Info.Genres, ", "))
 	}
-	if p.Filter.Duration {
+	if p.Filter.Duration && len(movie.Info.Duration) > 0 {
 		p.printInfo("Duration: ", movie.Info.Duration)
 	}
-	if p.Filter.Summary {
+	if p.Filter.Summary && len(movie.Info.Summary) > 0 {
 		p.printInfo("Summary: ", movie.Info.Summary)
 	}
-	if p.Filter.Directors {
+	if p.Filter.Directors && len(movie.Info.Credit.Directors) > 0 {
 		p.printInfo("Directors: ", strings.Join(movie.Info.Credit.Directors, ", "))
 	}
-	if p.Filter.Writers {
+	if p.Filter.Writers && len(movie.Info.Credit.Writers) > 0 {
 		p.printInfo("Writers: ", strings.Join(movie.Info.Credit.Writers, ", "))
 	}
-	if p.Filter.Stars {
+	if p.Filter.Stars && len(movie.Info.Credit.Stars) > 0 {
 		p.printInfo("Stars: ", strings.Join(movie.Info.Credit.Stars, ", "))
 	}
-	if p.Filter.Tagline {
+	if p.Filter.Tagline && len(movie.TL.Tags) > 0 {
 		p.printInfo("Tagline: ", strings.Join(movie.TL.Tags, ", "))
 	}
-	if p.Filter.Summaries {
+	if p.Filter.Summaries && movie.PS.Total > 0 {
 		p.printInfo("Summaries: ", string(movie.PS.Total))
 		for i := range movie.PS.Summaries {
 			fmt.Println()
 			p.printInfo(movie.PS.Summaries[i].Author, movie.PS.Summaries[i].Text)
 		}
 	}
-	if p.Filter.Keywords {
+	if p.Filter.Keywords && len(movie.PK.Keywords) > 0 {
 		max := 10
 		count := len(movie.PK.Keywords)
 		if count > 10 {
@@ -129,7 +131,7 @@ func (p *Printer) PrintMovie(movie models.Movie) {
 		sums := movie.PK.Keywords[0:max]
 		p.printInfo("Keywords: ", strings.Join(sums, ", "))
 	}
-	if p.Filter.ParentsGuide {
+	if p.Filter.ParentsGuide && movie.PG.TotalVote > 0 {
 		p.printInfo("ParentsGuide: ", "")
 
 		fmt.Printf(chalk.Bold.TextStyle("- Sex & Nudity: "))
@@ -208,7 +210,7 @@ func (p *Printer) printForRate(rate string) {
 	}
 }
 
-func (p *Printer) printBanner() {
+func (p *Printer) PrintBanner() {
 	banner := `
  ██████╗ ███╗   ███╗██████╗ ██████╗
 ██╔════╝ ████╗ ████║██╔══██╗██╔══██╗

@@ -1,7 +1,10 @@
 package rottentomatoes
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"regexp"
 	"strings"
 
 	"gmdb/models"
@@ -9,23 +12,46 @@ import (
 	"github.com/puerkitobio/goquery"
 )
 
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func FixSpace(input string) string {
+	input = strings.Replace(input, "<br> \n", "", -1)
+	input = strings.TrimSpace(input)
+	input = strings.Replace(input, " ", " ", -1)
+	return input
+}
+
 func ParseSearchMovies(doc *goquery.Document) *models.SearchResponse {
 	//^http://www\.rottentomatoes\.com/tv/[^/]+/?$
-	result := new(models.SearchResponse)
+	r := regexp.MustCompile(`(\{{*.*})`)
 
-	finder0 := doc.Find("div.search-results-root")
-	fmt.Println(finder0.Text())
+	firstScript := doc.Find("#main_container").First()
+	matches := r.FindString(FixSpace(firstScript.Text()))
 
-	if len(finder0.Nodes) > 0 {
-		doc.Find("ul.results_ul li.bottom_divider.clearfix").Each(func(i int, s *goquery.Selection) {
-			fmt.Println(s.Text())
-			node := s.Find("a")
+	data := &models.RTSearchResult{}
+	err := json.Unmarshal([]byte(matches), data)
 
-			fmt.Println(node.Text())
-		})
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	result.TotalFound = uint(len(finder0.Nodes))
+	result := new(models.SearchResponse)
+
+	for _, info := range data.MovieInfos {
+		resp := models.SearchResult{}
+
+		resp.URL = info.URL
+		resp.Title = info.Name
+		resp.Year = string(info.Year)
+
+		result.Searches = append(result.Searches, resp)
+	}
+
+	result.TotalFound = uint(len(data.MovieInfos))
 
 	return result
 }
@@ -33,14 +59,83 @@ func ParseSearchMovies(doc *goquery.Document) *models.SearchResponse {
 func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 	movieInfo := new(models.MovieInfo)
 
-	rating := doc.Find(".meter-value.superPageFontColor span").Text()
-	if len(rating) == 0 {
-		movieInfo.Rating = "-1"
-	} else if len(rating) > 4 {
-		movieInfo.Rating = rating[:3]
+	title := doc.Find("#heroImageContainer > a > h1")
+	year := doc.Find("#heroImageContainer > a > span")
+
+	duration := doc.Find("#mainColumn > section.panel.panel-rt.panel-box.movie_info.media > div > div.panel-body.content_body > ul > li:nth-child(8) > div.meta-value > time")
+	releaseDate := doc.Find("#mainColumn > section.panel.panel-rt.panel-box.movie_info.media > div > div.panel-body.content_body > ul > li.meta-row.clearfix.js-theater-release-dates > div.meta-value > time")
+
+	rtMeter := doc.Find("div.tomato-left .meter-value.superPageFontColor span").Text()
+	rateLeft := doc.Find(".tomato-left div.hidden-xs").First()
+	scoreAudince := doc.Find("div.media-body div.meter-value span")
+	votes := doc.Find("#scorePanel > div.col-sm-8.col-xs-12.audience-panel > div.audience-info.hidden-xs.superPageFontColor > div:nth-child(2)").Before("span")
+
+	//scoreAvgRating := s.After("span").Text()
+
+	c := 0
+	rateLeft.Find("span.subtle.superPageFontColor").Next().Each(func(i int, s *goquery.Selection) {
+		if c == 1 { //Reviews Counted
+			movieInfo.Reviews = FixSpace(s.Text())
+		} else if c == 2 { //Fresh
+
+		} else if c == 3 { //Rotten
+
+		}
+	})
+
+	if len(rtMeter) == 0 {
+		movieInfo.RTMeter = "-1"
+	} else if len(rtMeter) > 4 {
+		movieInfo.RTMeter = rtMeter[:3]
 	} else {
-		movieInfo.Rating = rating[:2]
+		movieInfo.RTMeter = rtMeter[:2]
 	}
+
+	movieInfo.Title = FixSpace(title.Text())
+	movieInfo.Year = FixSpace(year.Text())
+
+	movieInfo.Duration = FixSpace(duration.Text())
+	movieInfo.Released = FixSpace(releaseDate.Text())
+
+	movieInfo.Rating = FixSpace(scoreAudince.Text())
+	movieInfo.Votes = FixSpace(votes.Text())
+
+	creditInfo := new(models.CreditInfo)
+
+	doc.Find("#mainColumn > section.panel.panel-rt.panel-box.movie_info.media > div > div.panel-body.content_body > ul > li:nth-child(2) > div.meta-value").Each(func(i int, s *goquery.Selection) {
+		s.Find("a").Each(func(j int, l *goquery.Selection) {
+			links, _ := l.Attr("href")
+			if strings.HasPrefix(links, "/browse/opening/?genres") {
+				genre := FixSpace(l.Text())
+				movieInfo.Genres = append(movieInfo.Genres, genre)
+			}
+		})
+		c++
+	})
+
+	doc.Find("#mainColumn > section.panel.panel-rt.panel-box.movie_info.media > div > div.panel-body.content_body > ul > li:nth-child(4) > div.meta-value").Each(func(i int, s *goquery.Selection) {
+		s.Find("a").Each(func(j int, l *goquery.Selection) {
+			links, _ := l.Attr("href")
+			if strings.HasPrefix(links, "/celebrity") {
+				name := FixSpace(l.Text())
+				creditInfo.Writers = append(creditInfo.Writers, name)
+			}
+		})
+		c++
+	})
+
+	doc.Find("#mainColumn > section.panel.panel-rt.panel-box.movie_info.media > div > div.panel-body.content_body > ul > li:nth-child(3) > div.meta-value").Each(func(i int, s *goquery.Selection) {
+		s.Find("a").Each(func(j int, l *goquery.Selection) {
+			links, _ := l.Attr("href")
+			if strings.HasPrefix(links, "/celebrity") {
+				name := FixSpace(l.Text())
+				creditInfo.Directors = append(creditInfo.Directors, name)
+			}
+		})
+		c++
+	})
+
+	movieInfo.Credit = *creditInfo
 
 	return movieInfo
 }
@@ -57,6 +152,5 @@ func ParseMovieReviews(doc *goquery.Document) string {
 	} else {
 		fmt.Println("Looks like Rt also needs the year argument!")
 	}
-
 	return ""
 }

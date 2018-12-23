@@ -9,6 +9,7 @@ package gmdb
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -19,6 +20,8 @@ import (
 	"time"
 
 	"gmdb/models"
+	"gmdb/pkg/cache"
+	"gmdb/pkg/config"
 	"gmdb/services"
 
 	"github.com/briandowns/spinner"
@@ -28,6 +31,18 @@ import (
 var DefaultSpinner *spinner.Spinner
 
 var DefaultPrinter *services.Printer
+
+var Config *config.Config
+
+func Initialize() {
+	conf, err := config.LoadConfig()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	Config = conf
+	//TODO: config operations
+}
 
 func StartSpinner(id int, speed int) {
 	DefaultSpinner = spinner.New(spinner.CharSets[4], 100*time.Millisecond)
@@ -106,6 +121,11 @@ func HandleSearchTitleRequest(c *cli.Context) {
 		searchRequest.ScanRT = true
 	}
 
+	//Initialize Printer to print responses
+	DefaultPrinter = services.NewPrinter(UseNoResultFilter(), *searchRequest)
+
+	DefaultPrinter.PrintBanner()
+
 	StartSpinner(4, 100)
 
 	//Initialize SearchEngine for Query
@@ -114,10 +134,20 @@ func HandleSearchTitleRequest(c *cli.Context) {
 	//Get Responses from URLs
 	responses := engine.GetSearchResponses()
 
-	StopSpinner()
+	//Add to cache if available
+	if config.Cache.UseCache {
+		if config.Cache.UseSearchCache {
+			searchJSON, err := json.Marshal(responses[0])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			cache.WriteFile("IMDB", "searches", searchRequest.Title, string(searchJSON))
+			//TODO: else timeout 1 day write
+		}
+	}
 
-	//Initialize Printer to print responses
-	DefaultPrinter = services.NewPrinter(UseNoResultFilter(), *searchRequest)
+	StopSpinner()
 
 	//Print the responses
 	//Start Index: 0
@@ -127,6 +157,7 @@ func HandleSearchTitleRequest(c *cli.Context) {
 
 	isShowMoreOptionSelected := false
 
+	fmt.Println()
 	fmt.Println("(Enter 'q' to exit.)")
 
 	for {
@@ -153,7 +184,27 @@ func HandleSearchTitleRequest(c *cli.Context) {
 
 			//Get the movie info from IMDB
 			//TODO: Add multiple search engine instead of only IMDB
-			movie := engine.GetMovie("IMDB", responses[0].Searches[choice-1])
+			movie := new(models.Movie)
+
+			if c.Bool("imdb") {
+				movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])
+			}
+			if c.Bool("rottentomatoes") {
+				movie = engine.GetMovie("RottenTomatoes", responses[0].Searches[choice-1])
+			}
+
+			//Add to cache if available
+			if config.Cache.UseCache {
+				if config.Cache.UseMovieCache {
+					movieJSON, err := json.Marshal(movie)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+					cache.WriteFile("IMDB", "movies", responses[0].Searches[choice-1].ID, string(movieJSON))
+					//TODO: else timeout 1 day write
+				}
+			}
 
 			StopSpinner()
 

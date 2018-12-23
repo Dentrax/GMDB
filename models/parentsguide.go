@@ -8,6 +8,7 @@
 package models
 
 type ParentsGuide struct {
+	TotalVote   uint
 	Nudity      SeverityRate
 	Violence    SeverityRate
 	Profanity   SeverityRate

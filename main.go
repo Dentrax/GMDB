@@ -55,6 +55,7 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 				if len(c.Args()) > 0 {
+					gmdb.Initialize()
 					gmdb.HandleSearchTitleRequest(c)
 				} else {
 					return cli.NewExitError("No keywords provided", 1)

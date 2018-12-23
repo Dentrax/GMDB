@@ -32,7 +32,6 @@ func (s *RottenTomatoes) SearchMovie(request *models.SearchRequest) *models.Sear
 
 	url := "https://www.rottentomatoes.com" + "/search/?search=" + request.Title
 
-	log.Print(url)
 	rq, err := GetSearchMovies(services.GetDocumentFromURL(url))
 	//year, id\ exactsearch
 
