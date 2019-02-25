@@ -17,9 +17,10 @@ import (
 	"gmdb/services/common"
 )
 
-const PATH_TEST = "../../testdata/"
+const PATH_TEST = "../../testdata/IMDB/"
 
-func TestParseMovieInfo(t *testing.T) {
+//TODO: Move datas to testdata folder for better test struct
+func TestIMDBParseMovieInfo(t *testing.T) {
 	var testDatas = []struct {
 		FolderName string
 		File       string
@@ -167,7 +168,7 @@ func TestParseMovieInfo(t *testing.T) {
 	}
 }
 
-func TestParseTagline(t *testing.T) {
+func TestIMDBParseTagline(t *testing.T) {
 	var testDatas = []struct {
 		FolderName string
 		File       string
@@ -238,7 +239,7 @@ func TestParseTagline(t *testing.T) {
 	}
 }
 
-func TestParsePlotSummary(t *testing.T) {
+func TestIMDBParsePlotSummary(t *testing.T) {
 	var testDatas = []struct {
 		FolderName string
 		File       string
@@ -311,7 +312,7 @@ func TestParsePlotSummary(t *testing.T) {
 	}
 }
 
-func TestParsePlotKeywords(t *testing.T) {
+func TestIMDBParsePlotKeywords(t *testing.T) {
 	var testDatas = []struct {
 		FolderName string
 		File       string
@@ -391,7 +392,7 @@ func TestParsePlotKeywords(t *testing.T) {
 	}
 }
 
-func TestParseParentsGuide(t *testing.T) {
+func TestIMDBParseParentsGuide(t *testing.T) {
 	var testDatas = []struct {
 		FolderName string
 		File       string

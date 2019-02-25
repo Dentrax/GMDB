@@ -50,10 +50,10 @@ func (s *RottenTomatoes) GetMovie() (*models.Movie, error) {
 
 	//TODO: Optimization for spesific arguments
 
-	mi, err1 := GetMovieInfo(services.GetDocumentFromURL(url))
-	//mo, err1 := GetMovieReviews(services.GetDocumentFromURL(url))
+	mi, err := GetMovieInfo(services.GetDocumentFromURL(url))
+	//mr, err1 := GetMovieReviews(services.GetDocumentFromURL(url))
 
-	if err1 != nil {
+	if err != nil {
 		log.Fatalln("nil")
 		return nil, nil
 	}

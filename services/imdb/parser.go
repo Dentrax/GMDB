@@ -93,30 +93,37 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 	})
 
 	doc.Find("div > div > div > div .plot_summary_wrapper .summary_text").Each(func(i int, s *goquery.Selection) {
-		summary := s.First()
-		movieInfo.Summary = FixSpace(summary.Text())
+
+		s.Contents().Each(func(i int, s *goquery.Selection) {
+			if goquery.NodeName(s) == "#text" {
+				movieInfo.Summary += FixSpace(s.Text())
+			}
+		})
+
 	})
 
 	creditInfo := new(models.CreditInfo)
 
-	c := 0 //0: Directors, 1: Writers, 2: Stars
 	doc.Find("div > div > div > div .plot_summary_wrapper .credit_summary_item").Each(func(i int, s *goquery.Selection) {
+		typo := s.Find("h4")
+
 		s.Find("a").Each(func(j int, l *goquery.Selection) {
 			links, _ := l.Attr("href")
 			if strings.HasPrefix(links, "/name") {
 				name := FixSpace(l.Text())
-				if c == 0 {
+
+				//FIXME: Creator and Director? Seperate them.
+				if strings.Contains(FixSpace(typo.Text()), "Creator") {
 					creditInfo.Directors = append(creditInfo.Directors, name)
-				}
-				if c == 1 {
-					creditInfo.Writers = append(creditInfo.Writers, name)
-				}
-				if c == 2 {
+				} else if strings.Contains(FixSpace(typo.Text()), "Director") {
+					creditInfo.Directors = append(creditInfo.Directors, name)
+				} else if strings.Contains(FixSpace(typo.Text()), "Star") {
 					creditInfo.Stars = append(creditInfo.Stars, name)
+				} else if strings.Contains(FixSpace(typo.Text()), "Writer") {
+					creditInfo.Writers = append(creditInfo.Writers, name)
 				}
 			}
 		})
-		c++
 	})
 
 	movieInfo.Credit = *creditInfo
@@ -128,6 +135,7 @@ func FixSpace(input string) string {
 	input = strings.Replace(input, "<br> \n", "", -1)
 	input = strings.TrimSpace(input)
 	input = strings.Replace(input, " ", " ", -1)
+	input = strings.Replace(input, "»", "", -1)
 	return input
 }
 

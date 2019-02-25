@@ -46,6 +46,10 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
+	//=======================
+	// CONFIG - APP
+	//=======================
+
 	configApp := &AppConfig{
 		LogSavePath: cfg.Section("log").Key("path").String(),
 		LogSaveName: cfg.Section("log").Key("name").String(),
@@ -53,12 +57,18 @@ func LoadConfig() (*Config, error) {
 		TimeFormat:  cfg.Section("log").Key("format").String(),
 	}
 
-	useCache, err1 := cfg.Section("cache").Key("use-cache").Bool()
-	useSearchCache, err2 := cfg.Section("cache").Key("search-cache").Bool()
-	useMovieCache, err3 := cfg.Section("cache").Key("movie-cache").Bool()
-	useTrailerCache, err4 := cfg.Section("cache").Key("trailer-cache").Bool()
+	App = configApp
 
-	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+	//=======================
+	// CONFIG - CACHE
+	//=======================
+
+	useCache, err := cfg.Section("cache").Key("use-cache").Bool()
+	useSearchCache, err := cfg.Section("cache").Key("search-cache").Bool()
+	useMovieCache, err := cfg.Section("cache").Key("movie-cache").Bool()
+	useTrailerCache, err := cfg.Section("cache").Key("trailer-cache").Bool()
+
+	if err != nil {
 		fmt.Printf("[Config] cache parse error: %v", err)
 		return nil, err
 	}
@@ -70,7 +80,6 @@ func LoadConfig() (*Config, error) {
 		UseTrailerCache: useTrailerCache,
 	}
 
-	App = configApp
 	Cache = configCache
 
 	return &Config{

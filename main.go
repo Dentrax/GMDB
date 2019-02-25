@@ -14,6 +14,7 @@ import (
 
 	"gmdb/models"
 	"gmdb/pkg"
+	"gmdb/pkg/config"
 	"gmdb/services"
 
 	"github.com/urfave/cli"
@@ -55,8 +56,38 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 				if len(c.Args()) > 0 {
-					gmdb.Initialize()
+					config, err := config.LoadConfig()
+					if err != nil {
+						return cli.NewExitError("Failed to load config", 1)
+					}
+					gmdb := &gmdb.App{}
+					gmdb.Initialize(config)
 					gmdb.HandleSearchTitleRequest(c)
+				} else {
+					return cli.NewExitError("No keywords provided", 1)
+				}
+				return nil
+			},
+			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
+				fmt.Fprintf(c.App.Writer, "Wrong usage: %q \n", err)
+				return err
+			},
+		},
+		cli.Command{
+			Name:        "learn",
+			Usage:       "usg",
+			UsageText:   "usg text",
+			Description: "desc",
+			ArgsUsage:   "[arg]",
+			Action: func(c *cli.Context) error {
+				if len(c.Args()) > 0 {
+					config, err := config.LoadConfig()
+					if err != nil {
+						return cli.NewExitError("Failed to load config", 1)
+					}
+					gmdb := &gmdb.App{}
+					gmdb.Initialize(config)
+					gmdb.HandleLearnRequest(c)
 				} else {
 					return cli.NewExitError("No keywords provided", 1)
 				}

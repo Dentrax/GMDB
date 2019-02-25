@@ -39,6 +39,7 @@ func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, respon
 	totalResponse := len(responses)
 
 	if totalResponse > 0 {
+		totalIndexCounter := 0
 		for i := 0; i < totalResponse; i++ {
 			currEngine := responses[i].SearchEngine
 			totalResult := uint8(len(responses[i].Searches))
@@ -56,6 +57,7 @@ func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, respon
 					fmt.Printf("From%v", " ")
 					fmt.Println(lime(currEngine))
 				}
+
 				filterCount := responses[i].Searches[min:max]
 				indexCounter := min
 				for j := range filterCount {
@@ -64,15 +66,18 @@ func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, respon
 						p.printInfo(responses[i].Searches[indexCounter].Title, responses[i].Searches[indexCounter].Year)
 						indexCounter++
 					} else {
-						fmt.Printf("%2d) ", j+1)
+						totalIndexCounter++
+						fmt.Printf("%2d) ", totalIndexCounter)
 						p.printInfo(responses[i].Searches[j].Title, responses[i].Searches[j].Year)
 					}
 				}
-				if totalResult > max {
-					if totalResult > 10 {
-						moreCount := len(responses[i].Searches) - 10
-						fmt.Printf("%2d) ", 0)
-						p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
+				if len(responses) == 1 {
+					if totalResult > max {
+						if totalResult > 10 {
+							moreCount := len(responses[i].Searches) - 10
+							fmt.Printf("%2d) ", 0)
+							p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
+						}
 					}
 				}
 			}

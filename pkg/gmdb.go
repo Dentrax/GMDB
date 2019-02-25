@@ -19,10 +19,13 @@ import (
 	"strings"
 	"time"
 
+	"gmdb/learner"
 	"gmdb/models"
 	"gmdb/pkg/cache"
 	"gmdb/pkg/config"
 	"gmdb/services"
+	"gmdb/store"
+	"gmdb/store/database"
 
 	"github.com/briandowns/spinner"
 	"github.com/urfave/cli"
@@ -34,14 +37,20 @@ var DefaultPrinter *services.Printer
 
 var Config *config.Config
 
-func Initialize() {
-	conf, err := config.LoadConfig()
+type App struct {
+	Config *config.Config
+	DB     store.Store
+}
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	Config = conf
-	//TODO: config operations
+func (a *App) Initialize(config *config.Config) {
+	a.Config = config
+
+	dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		"localhost", 1234, "dentrax", "1", "gmdb")
+
+	fmt.Println(dbInfo)
+
+	a.DB = database.New("sqlite3", dbInfo)
 }
 
 func StartSpinner(id int, speed int) {
@@ -109,7 +118,21 @@ func AskYNQuestion(question string, tries int, defaultInput bool) bool {
 	return false
 }
 
-func HandleSearchTitleRequest(c *cli.Context) {
+func (a *App) HandleLearnRequest(c *cli.Context) {
+	learnRequest := new(models.LearnRequest)
+	learnRequest.Filename = strings.Join(c.Args(), " ")
+
+	learn, err := learner.Learn(learnRequest)
+
+	if err != nil {
+		os.Exit(1)
+	}
+
+	fmt.Println(learn.Success)
+}
+
+//FIXME: Too long and hardcoded function, make it better
+func (a *App) HandleSearchTitleRequest(c *cli.Context) {
 	searchRequest := new(models.SearchRequest)
 	searchRequest.Title = strings.Join(c.Args(), "+")
 
@@ -168,6 +191,8 @@ func HandleSearchTitleRequest(c *cli.Context) {
 	//ShowMore Selected: false
 	DefaultPrinter.PrintSearchResponses(0, 10, false, responses)
 
+	var maxChoice = 10 * len(responses)
+
 	isShowMoreOptionSelected := false
 
 	fmt.Println()
@@ -178,7 +203,7 @@ func HandleSearchTitleRequest(c *cli.Context) {
 
 		choice := WaitInputIntFromCLI()
 
-		if !isShowMoreOptionSelected && choice == 0 {
+		if !isShowMoreOptionSelected && choice == 0 && len(responses) == 1 {
 			isShowMoreOptionSelected = true
 
 			//Print the other results that didn't show first
@@ -188,20 +213,23 @@ func HandleSearchTitleRequest(c *cli.Context) {
 			DefaultPrinter.PrintSearchResponses(10, 200, isShowMoreOptionSelected, responses)
 			continue
 
-		} else if (!isShowMoreOptionSelected && choice > 0 && choice <= 10) ||
+		} else if (!isShowMoreOptionSelected && choice > 0 && choice <= maxChoice) ||
 			(isShowMoreOptionSelected && choice > 0 && choice <= 200) {
 
-			fmt.Println("\nGetting information...\n")
+			fmt.Println("\nGetting information...")
+			fmt.Println()
 
 			StartSpinner(37, 150)
 
-			//Get the movie info from IMDB
-			//TODO: Add multiple search engine instead of only IMDB
 			movie := new(models.Movie)
 
 			if c.Bool("all") {
 				//FIXME: Default engine IMDB, make array? for all results?
-				movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])
+				if (choice - 1) >= 10 {
+					movie = engine.GetMovie("RottenTomatoes", responses[1].Searches[choice-1-10])
+				} else if (choice - 1) >= 0 {
+					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])
+				}
 			} else {
 				if c.Bool("imdb") {
 					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])

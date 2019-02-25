@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gmdb/store"
+	"gmdb/store/database/ddl"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -36,13 +37,16 @@ func open(driver, config string) *sql.DB {
 		log.Fatalln(err)
 	}
 
-	log.Println("database connect success")
+	if err := setupDatabase(db); err != nil {
+		log.Println(err)
+		log.Fatalln("migration failed")
+	}
 
 	return db
 }
 
 func pingDatabase(db *sql.DB) (err error) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		err = db.Ping()
 		if err == nil {
 			return
@@ -51,4 +55,8 @@ func pingDatabase(db *sql.DB) (err error) {
 		time.Sleep(time.Second)
 	}
 	return
+}
+
+func setupDatabase(db *sql.DB) error {
+	return ddl.Migrate(db)
 }
