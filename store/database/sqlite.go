@@ -2,47 +2,40 @@ package database
 
 import (
 	"database/sql"
-	"log"
+	"sync"
 	"time"
 
-	"gmdb/store"
 	"gmdb/store/database/ddl"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Database struct {
-	*sql.DB
-
-	Driver string
-	Config string
-}
-
-func New(driver string, config string) store.Store {
-	return &Database{
-		DB:     open(driver, config),
-		Driver: driver,
-		Config: config,
-	}
-}
-
-func open(driver, config string) *sql.DB {
-	db, err := sql.Open(driver, config)
+func Connect(driver, datasource string) (*DB, error) {
+	db, err := sql.Open(driver, datasource)
 
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	if err := pingDatabase(db); err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	if err := setupDatabase(db); err != nil {
-		log.Println(err)
-		log.Fatalln("migration failed")
+		return nil, err
 	}
 
-	return db
+	db.SetMaxOpenConns(1)
+
+	var engine Driver = Sqlite
+	var locker Locker = &sync.RWMutex{}
+
+	return &DB{
+		conn:   sqlx.NewDb(db, driver),
+		lock:   locker,
+		driver: engine,
+	}, nil
 }
 
 func pingDatabase(db *sql.DB) (err error) {
@@ -51,7 +44,6 @@ func pingDatabase(db *sql.DB) (err error) {
 		if err == nil {
 			return
 		}
-		log.Println("database ping failed. retry in 1s")
 		time.Sleep(time.Second)
 	}
 	return

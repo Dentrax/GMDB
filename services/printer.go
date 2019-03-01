@@ -10,6 +10,7 @@ package services
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"gmdb/models"
 
@@ -17,21 +18,37 @@ import (
 )
 
 type Printer struct {
-	Filter  models.ResultFilter
-	Request models.SearchRequest
+	Filter         models.ResultFilter
+	RequestSearch  models.SearchRequest
+	RequestHistory models.HistoryRequest
+	RequestMyList  models.MyListRequest
 }
 
 func NewPrinter(filter models.ResultFilter, request models.SearchRequest) *Printer {
 	return &Printer{
-		Filter:  filter,
-		Request: request,
+		Filter:        filter,
+		RequestSearch: request,
 	}
 }
 
 func NewSearchPrinter(request models.SearchRequest) *Printer {
 	return &Printer{
-		Filter:  models.ResultFilter{},
-		Request: request,
+		Filter:        models.ResultFilter{},
+		RequestSearch: request,
+	}
+}
+
+func NewHistoryPrinter(request models.HistoryRequest) *Printer {
+	return &Printer{
+		Filter:         models.ResultFilter{},
+		RequestHistory: request,
+	}
+}
+
+func NewMyListPrinter(filter models.ResultFilter, request models.MyListRequest) *Printer {
+	return &Printer{
+		Filter:        filter,
+		RequestMyList: request,
 	}
 }
 
@@ -80,6 +97,55 @@ func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, respon
 						}
 					}
 				}
+			}
+		}
+	}
+}
+
+func (p *Printer) PrintHistoryResponses(responses []models.HistoryResponse) {
+	totalResponse := len(responses)
+	if totalResponse > 0 {
+		for i := 0; i < totalResponse; i++ {
+			search := responses[i].Search
+
+			title := responses[i].MovieTitle
+			//year := responses[i].MovieYear
+
+			time := time.Unix(search.Created, 0).Format(time.RubyDate)
+
+			p.printSearchHistoryInfo(i, title, time)
+		}
+	}
+}
+
+func (p *Printer) PrintMyListResponses(responses []models.MyListResponse) {
+	totalResponse := len(responses)
+	if totalResponse > 0 {
+		if p.Filter.ShowWLs {
+			for i := 0; i < totalResponse; i++ {
+				wl := responses[i].WL
+
+				title := responses[i].MovieTitle
+				//year := responses[i].MovieYear
+
+				timeCreated := time.Unix(wl.Created, 0).Format(time.RubyDate)
+				timeUpdated := time.Unix(wl.Updated, 0).Format(time.RubyDate)
+
+				p.printWatchLaterInfo(i, title, timeCreated, timeUpdated, wl.Watched)
+			}
+		}
+
+		if p.Filter.ShowMLs {
+			for i := 0; i < totalResponse; i++ {
+				ml := responses[i].ML
+
+				title := responses[i].MovieTitle
+				//year := responses[i].MovieYear
+
+				timeCreated := time.Unix(ml.Created, 0).Format(time.RubyDate)
+				timeUpdated := time.Unix(ml.Updated, 0).Format(time.RubyDate)
+
+				p.printMovieLearnInfo(i, title, timeCreated, timeUpdated, ml.Liked)
 			}
 		}
 	}
@@ -154,7 +220,117 @@ func (p *Printer) PrintMovie(movie models.Movie) {
 
 		fmt.Printf(chalk.Bold.TextStyle("- Frightening & Intense: "))
 		p.printForRate(movie.PG.Frightening.FinalRate)
+	} else {
+		fmt.Println()
 	}
+}
+
+func (p *Printer) printSearchHistoryInfo(index int, title string, time string) {
+	fmt.Printf("%2d) ", index+1)
+
+	styleTitle := chalk.Cyan.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleTime := chalk.White.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Italic)
+
+	if p.Filter.NoColor {
+		p.printInfo("", title)
+		fmt.Printf("[%v]", time)
+	} else {
+		fmt.Printf("%s%s%s\n", styleTitle, title, chalk.Reset)
+		fmt.Printf(" %s[%v]%s\n", styleTime, time, chalk.Reset)
+	}
+
+	fmt.Println()
+}
+
+func (p *Printer) printWatchLaterInfo(index int, title string, timeCreated string, timeUpdated string, watched bool) {
+	fmt.Printf("%2d) ", index+1)
+
+	styleTitle := chalk.Cyan.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleTime := chalk.White.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Italic)
+
+	styleYes := chalk.Green.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleNo := chalk.Red.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	if p.Filter.NoColor {
+		p.printInfo("", title)
+		fmt.Printf(" Added: [%v]", timeCreated)
+		if watched {
+			fmt.Printf("%s [%s] [%v]", " Watched:", "YES", timeUpdated)
+		} else {
+			fmt.Printf("%s [%s]", " Watched:", "NO")
+		}
+	} else {
+		fmt.Printf("%s%s%s\n", styleTitle, title, chalk.Reset)
+		fmt.Printf("%s", " Added:")
+		fmt.Printf("%s  [%v]%s\n", styleTime, timeCreated, chalk.Reset)
+		if watched {
+			fmt.Printf("%s", " Watched:")
+			fmt.Printf("%s%s[%v]%s", styleYes, "[YES] ", timeUpdated, chalk.Reset)
+		} else {
+			fmt.Printf("%s", " Watched:")
+			fmt.Printf("%s%s%s\n", styleNo, "[NO]", chalk.Reset)
+		}
+	}
+
+	fmt.Println()
+}
+
+func (p *Printer) printMovieLearnInfo(index int, title string, timeCreated string, timeUpdated string, liked bool) {
+	fmt.Printf("%2d) ", index+1)
+
+	styleTitle := chalk.Cyan.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleTime := chalk.White.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Italic)
+
+	styleYes := chalk.Green.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleNo := chalk.Red.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	if p.Filter.NoColor {
+		p.printInfo("", title)
+		fmt.Printf(" Added: [%v]", timeCreated)
+		if liked {
+			fmt.Printf("%s [%v]", " Liked:", "YES")
+		} else {
+			fmt.Printf("%s [%s]", " Liked:", "NO")
+		}
+	} else {
+		fmt.Printf("%s%s%s\n", styleTitle, title, chalk.Reset)
+		fmt.Printf("%s", " Added:")
+		fmt.Printf("%s[%v]%s\n", styleTime, timeCreated, chalk.Reset)
+		if liked {
+			fmt.Printf("%s", " Liked:")
+			fmt.Printf("%s%s%s", styleYes, "[YES]", chalk.Reset)
+		} else {
+			fmt.Printf("%s", " Liked:")
+			fmt.Printf("%s%s%s\n", styleNo, "[NO]", chalk.Reset)
+		}
+	}
+
+	fmt.Println()
 }
 
 func (p *Printer) printInfo(s1 string, s2 string) {

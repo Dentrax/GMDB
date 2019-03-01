@@ -98,6 +98,76 @@ func main() {
 				return err
 			},
 		},
+		cli.Command{
+			Name:        "history",
+			Usage:       "hst",
+			UsageText:   "hst text",
+			Description: "desc",
+			ArgsUsage:   "[arg]",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "Get all histories both of search and watch",
+				},
+				cli.BoolFlag{
+					Name:  "search, s",
+					Usage: "Get search histories",
+				},
+				cli.BoolFlag{
+					Name:  "watch, w",
+					Usage: "Get watch histories",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				config, err := config.LoadConfig()
+				if err != nil {
+					return cli.NewExitError("Failed to load config", 1)
+				}
+				gmdb := &gmdb.App{}
+				gmdb.Initialize(config)
+				gmdb.HandleHistoryRequest(c)
+				return nil
+			},
+			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
+				fmt.Fprintf(c.App.Writer, "Wrong usage: %q \n", err)
+				return err
+			},
+		},
+		cli.Command{
+			Name:        "list",
+			Usage:       "lst",
+			UsageText:   "lst text",
+			Description: "desc",
+			ArgsUsage:   "[arg]",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "Get all lists both of Watch Later(s) and Like(s)",
+				},
+				cli.BoolFlag{
+					Name:  "watch, w",
+					Usage: "Get Watch Later list",
+				},
+				cli.BoolFlag{
+					Name:  "like, l",
+					Usage: "Get Movie Likes list",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				config, err := config.LoadConfig()
+				if err != nil {
+					return cli.NewExitError("Failed to load config", 1)
+				}
+				gmdb := &gmdb.App{}
+				gmdb.Initialize(config)
+				gmdb.HandleMyListRequest(c)
+				return nil
+			},
+			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
+				fmt.Fprintf(c.App.Writer, "Wrong usage: %q \n", err)
+				return err
+			},
+		},
 	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{

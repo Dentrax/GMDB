@@ -24,6 +24,8 @@ type ResultFilter struct {
 	Summaries    bool
 	Keywords     bool
 	ParentsGuide bool
+	ShowWLs      bool
+	ShowMLs      bool
 }
 
 type SearchRequest struct {

@@ -33,8 +33,8 @@ func TestRTParseMovieInfo(t *testing.T) {
 				Votes:    "186,305",
 				Genres:   []string{"Action & Adventure", "Comedy", "Science Fiction & Fantasy"},
 				Duration: "103 minutes",
-				Released: "",
-				Summary:  "",
+				Released: "Feb 12, 2016",
+				Summary:  "Based upon Marvel Comics' most unconventional anti-hero, DEADPOOL tells the origin story of former Special Forces operative turned mercenary Wade Wilson, who after being subjected to a rogue experiment that leaves him with accelerated healing powers, adopts the alter ego Deadpool. Armed with his new abilities and a dark, twisted sense of humor, Deadpool hunts down the man who nearly destroyed his life. (C) Fox",
 				Credit: models.CreditInfo{
 					Directors: []string{"Tim Miller"},
 					Writers:   []string{"Rhett Reese", "Paul Wernick"},

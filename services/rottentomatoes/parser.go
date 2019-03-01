@@ -61,8 +61,9 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 	title := doc.Find("#heroImageContainer > a > h1")
 	year := doc.Find("#heroImageContainer > a > span")
 
+	summary := doc.Find("#movieSynopsis")
 	duration := doc.Find("#mainColumn > section.panel.panel-rt.panel-box.movie_info.media > div > div.panel-body.content_body > ul > li:nth-child(8) > div.meta-value > time")
-	releaseDate := doc.Find("#mainColumn > section.panel.panel-rt.panel-box.movie_info.media > div > div.panel-body.content_body > ul > li.meta-row.clearfix.js-theater-release-dates > div.meta-value > time")
+	releaseDate := doc.Find("#mainColumn > section.panel.panel-rt.panel-box.movie_info.media > div > div.panel-body.content_body > ul > li:nth-child(5) > div.meta-value > time")
 
 	rtMeter := doc.Find("div.tomato-left .meter-value.superPageFontColor span").Text()
 	rateLeft := doc.Find(".tomato-left div.hidden-xs").First()
@@ -95,6 +96,8 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 
 	movieInfo.Duration = FixSpace(duration.Text())
 	movieInfo.Released = FixSpace(releaseDate.Text())
+
+	movieInfo.Summary = FixSpace(summary.Text())
 
 	movieInfo.Rating = FixSpace(scoreAudince.Text())
 	movieInfo.Votes = FixSpace(votes.Text())

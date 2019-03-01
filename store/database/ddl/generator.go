@@ -14,21 +14,29 @@ var migrations = []struct {
 		stmt: createTableMovies,
 	},
 	{
-		name: "create-table-movie-library",
-		stmt: createTableMovieLibrary,
+		name: "create-table-movie-watchlater",
+		stmt: createTableMovieWatchLater,
 	},
 	{
-		name: "create-table-parents-guide",
-		stmt: createTableParentsGuide,
+		name: "create-table-movie-parents-guide",
+		stmt: createTableMovieParentsGuide,
 	},
 	{
-		name: "create-table-history",
-		stmt: createTableHistory,
+		name: "create-table-movie-search-history",
+		stmt: createTableMovieSearchHistory,
+	},
+	{
+		name: "create-table-movie-note",
+		stmt: createTableMovieNote,
+	},
+	{
+		name: "create-table-movie-learn",
+		stmt: createTableMovieLearn,
 	},
 }
 
-// Migrate performs the database migration. If the migration fails
-// and error is returned.
+// Migrate performs the database migration.
+// If the migration fails and error is returned.
 func Migrate(db *sql.DB) error {
 	if err := createTable(db); err != nil {
 		return err
@@ -103,28 +111,47 @@ SELECT name FROM migrations
 var createTableMovies = `
 CREATE TABLE IF NOT EXISTS movies (
  movie_id      INTEGER PRIMARY KEY AUTOINCREMENT
-,movie_title   TEXT
-,movie_year    INTEGER
-,movie_rating  INTEGER
-,movie_tv_show BOOLEAN
-,movie_genre   TEXT
-,movie_active  BOOLEAN
-,movie_like    BOOLEAN
-,UNIQUE(movie_title)
+,movie_title TEXT
+,movie_year TEXT
+,movie_rating TEXT
+,movie_votes TEXT
+,movie_reviews TEXT
+,movie_duration TEXT
+,movie_released TEXT
+,movie_summary TEXT
+,movie_metascore TEXT
+,movie_review_count_user TEXT
+,movie_review_count_critic TEXT
+,movie_rtmeter TEXT
+,movie_url_trailer_imdb TEXT
+,movie_url_poster_imdb TEXT
 );
 `
 
-var createTableMovieLibrary = `
-CREATE TABLE IF NOT EXISTS movie_library (
- mlib_id          INTEGER PRIMARY KEY AUTOINCREMENT
-,mlib_movie_id    INTEGER
-,mlib_watched     BOOLEAN
-,UNIQUE(mlib_movie_id)
+var createTableMovieWatchLater = `
+CREATE TABLE IF NOT EXISTS movie_watchlaters (
+ wl_id          INTEGER PRIMARY KEY AUTOINCREMENT
+,wl_movie_id    INTEGER
+,wl_created     INTEGER
+,wl_updated     INTEGER
+,wl_watched     BOOLEAN
+,UNIQUE(wl_movie_id)
 );
 `
 
-var createTableParentsGuide = `
-CREATE TABLE IF NOT EXISTS parents_guide (
+var createTableMovieLearn = `
+CREATE TABLE IF NOT EXISTS movie_learns (
+ ml_id          INTEGER PRIMARY KEY AUTOINCREMENT
+,ml_movie_id    INTEGER
+,ml_created     INTEGER
+,ml_updated     INTEGER
+,ml_liked       BOOLEAN
+,UNIQUE(ml_movie_id)
+);
+`
+
+var createTableMovieParentsGuide = `
+CREATE TABLE IF NOT EXISTS movie_parentsguides (
  pg_id          INTEGER PRIMARY KEY AUTOINCREMENT
 ,pg_movie_id    INTEGER
 ,pg_nudity      INTEGER
@@ -136,11 +163,25 @@ CREATE TABLE IF NOT EXISTS parents_guide (
 );
 `
 
-var createTableHistory = `
-CREATE TABLE IF NOT EXISTS histories (
- history_id      INTEGER PRIMARY KEY AUTOINCREMENT
-,history_name    TEXT
-,history_created INTEGER
-,UNIQUE(history_name)
+var createTableMovieSearchHistory = `
+CREATE TABLE IF NOT EXISTS movie_searches (
+ search_id       INTEGER PRIMARY KEY AUTOINCREMENT
+,search_movie_id INTEGER
+,search_created  INTEGER
+,search_from     INTEGER
+);
+`
+
+var createTableMovieNote = `
+CREATE TABLE IF NOT EXISTS movie_notes (
+ note_id       INTEGER PRIMARY KEY AUTOINCREMENT
+,note_movie_id INTEGER
+,note_created  INTEGER
+,note_updated  INTEGER
+,note_from     INTEGER
+,note_hour     INTEGER
+,note_minute   INTEGER
+,note_second   INTEGER
+,note_text     TEXT
 );
 `
