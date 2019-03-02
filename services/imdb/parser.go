@@ -54,7 +54,7 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 		stars := s.Find(".ratings_wrapper .imdbRating .ratingValue")
 		rated := s.Find(".ratings_wrapper .imdbRating .small")
 
-		title := s.Find(".titleBar .title_wrapper > h1").Not("span")
+		title := s.Find(".titleBar .title_wrapper > h1")
 		year := s.Find(".titleBar .title_wrapper > h1").Children()
 
 		duration := s.Find(".subtext > time")
@@ -68,9 +68,13 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 		})
 
 		//TODO: add Metascore, ReviewCountUser, ReviewCountCritic
+		yearStr := strings.Replace(year.Text(), "(", "", -1)
+		yearStr = strings.Replace(yearStr, ")", "", -1)
 
-		movieInfo.Title = FixSpace(title.Text())
-		movieInfo.Year = FixSpace(year.Text())
+		titleStr := strings.Replace(title.Text(), year.Text(), "", -1)
+
+		movieInfo.Title = FixSpace(titleStr)
+		movieInfo.Year = FixSpace(yearStr)
 
 		movieInfo.Rating = FixSpace(stars.Text())
 		movieInfo.Votes = FixSpace(rated.Text())
@@ -78,7 +82,36 @@ func ParseMovieInfo(doc *goquery.Document) *models.MovieInfo {
 		movieInfo.Duration = FixSpace(duration.Text())
 		movieInfo.Released = FixSpace(releaseDate.Text())
 
+		movieInfo.IsTVSeries = false
+		movieInfo.Seasons = "0"
+		movieInfo.Episodes = "0"
 	})
+
+	doc.Find("#title-episode-widget > div").Each(func(i int, s *goquery.Selection) {
+		seasonFind := s.Find("div:nth-child(4)")
+		seasons := seasonFind.Children().Length()
+
+		yearFind := s.Find("div:nth-child(5)")
+		year := yearFind.Children().Last()
+
+		if seasons > 0 {
+			movieInfo.Year = FixSpace(year.Text())
+
+			movieInfo.IsTVSeries = true
+			movieInfo.Seasons = strconv.Itoa(seasons)
+			movieInfo.Episodes = "0"
+		}
+	})
+
+	if movieInfo.IsTVSeries {
+		episodesFind := doc.Find("#title-overview-widget > div.vital > div.button_panel.navigation_panel > a > div > div > span")
+		episodesText := FixSpace(strings.Replace(episodesFind.Text(), "episodes", "", -1))
+		episodes, _ := strconv.Atoi(episodesText)
+
+		if episodes > 0 {
+			movieInfo.Episodes = episodesText
+		}
+	}
 
 	doc.Find("div > div > div > div .vital .slate_wrapper").Each(func(i int, s *goquery.Selection) {
 		slate := s.Find("div.slate")

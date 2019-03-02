@@ -24,6 +24,7 @@ type Printer struct {
 	RequestTorrent models.SearchTorrentRequest
 	RequestHistory models.HistoryRequest
 	RequestMyList  models.MyListRequest
+	RequestNote    models.NoteRequest
 }
 
 func NewPrinter(filter models.ResultFilter, request models.SearchRequest) *Printer {
@@ -51,6 +52,13 @@ func NewHistoryPrinter(request models.HistoryRequest) *Printer {
 	return &Printer{
 		Filter:         models.ResultFilter{},
 		RequestHistory: request,
+	}
+}
+
+func NewNotePrinter(request models.NoteRequest) *Printer {
+	return &Printer{
+		Filter:      models.ResultFilter{},
+		RequestNote: request,
 	}
 }
 
@@ -158,6 +166,19 @@ func (p *Printer) PrintTorrentResponses(min, max uint8, isMore bool, responses [
 	}
 }
 
+func (p *Printer) PrintNoteResponses(responses []models.NoteResponse) {
+	totalResponse := len(responses)
+	if totalResponse > 0 {
+		for i := 0; i < totalResponse; i++ {
+			note := responses[i].Note
+			title := responses[i].MovieTitle
+			time := time.Unix(note.Created, 0).Format(time.RubyDate)
+
+			p.printNoteInfo(i, title, time, note)
+		}
+	}
+}
+
 func (p *Printer) PrintHistoryResponses(responses []models.HistoryResponse) {
 	totalResponse := len(responses)
 	if totalResponse > 0 {
@@ -169,7 +190,7 @@ func (p *Printer) PrintHistoryResponses(responses []models.HistoryResponse) {
 
 			time := time.Unix(search.Created, 0).Format(time.RubyDate)
 
-			p.printSearchHistoryInfo(i, title, time)
+			p.printSearchHistoryInfo(i, title, search.From, time)
 		}
 	}
 }
@@ -178,32 +199,41 @@ func (p *Printer) PrintMyListResponses(responses []models.MyListResponse) {
 	totalResponse := len(responses)
 	if totalResponse > 0 {
 		if p.Filter.ShowWLs {
+			fmt.Println("Watch Later:")
+			fmt.Println()
 			for i := 0; i < totalResponse; i++ {
 				wl := responses[i].WL
+				if wl.ID > 0 {
+					title := responses[i].MovieTitle
+					//year := responses[i].MovieYear
 
-				title := responses[i].MovieTitle
-				//year := responses[i].MovieYear
+					timeCreated := time.Unix(wl.Created, 0).Format(time.RubyDate)
+					timeUpdated := time.Unix(wl.Updated, 0).Format(time.RubyDate)
 
-				timeCreated := time.Unix(wl.Created, 0).Format(time.RubyDate)
-				timeUpdated := time.Unix(wl.Updated, 0).Format(time.RubyDate)
+					p.printWatchLaterInfo(i, title, timeCreated, timeUpdated, wl.Watched)
 
-				p.printWatchLaterInfo(i, title, timeCreated, timeUpdated, wl.Watched)
+				}
 			}
 		}
 
 		if p.Filter.ShowMLs {
+			fmt.Println("Liked Movies:")
+			fmt.Println()
 			for i := 0; i < totalResponse; i++ {
 				ml := responses[i].ML
+				if ml.ID > 0 {
+					title := responses[i].MovieTitle
+					//year := responses[i].MovieYear
 
-				title := responses[i].MovieTitle
-				//year := responses[i].MovieYear
+					timeCreated := time.Unix(ml.Created, 0).Format(time.RubyDate)
+					timeUpdated := time.Unix(ml.Updated, 0).Format(time.RubyDate)
+					p.printMovieLearnInfo(i, title, timeCreated, timeUpdated, ml.Liked)
 
-				timeCreated := time.Unix(ml.Created, 0).Format(time.RubyDate)
-				timeUpdated := time.Unix(ml.Updated, 0).Format(time.RubyDate)
-
-				p.printMovieLearnInfo(i, title, timeCreated, timeUpdated, ml.Liked)
+				}
 			}
 		}
+	} else {
+		fmt.Println("Your list is empty!")
 	}
 }
 
@@ -343,7 +373,42 @@ func (p *Printer) printTorrentInfo(result models.SearchTorrentResult, info parse
 	fmt.Println()
 }
 
-func (p *Printer) printSearchHistoryInfo(index int, title string, time string) {
+func (p *Printer) printNoteInfo(index int, title string, time string, note models.MovieNoteInfo) {
+	fmt.Printf("%2d) ", index+1)
+
+	styleTitle := chalk.Cyan.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleTime := chalk.White.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Italic)
+
+	styleGreen := chalk.Green.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleRed := chalk.Red.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	if p.Filter.NoColor {
+		p.printInfo("", title)
+		fmt.Printf("[%v]", time)
+	} else {
+		fmt.Printf("%s%s%s\n", styleTitle, title, chalk.Reset)
+		if note.Season > 0 && note.Episode > 0 {
+			fmt.Printf(" %s[S%02dE%02d]%s\n", styleRed, note.Season, note.Episode, chalk.Reset)
+		}
+		fmt.Printf(" %sAt:%s %dh, %02dm, %02ds\n", styleTitle, chalk.Reset, note.Hour, note.Minute, note.Second)
+		fmt.Printf(" %sComment:%s %s%s\n", styleTitle, styleGreen, note.Text, chalk.Reset)
+		fmt.Printf(" %s[%v]%s\n", styleTime, time, chalk.Reset)
+	}
+
+	fmt.Println()
+}
+
+func (p *Printer) printSearchHistoryInfo(index int, title string, from string, time string) {
 	fmt.Printf("%2d) ", index+1)
 
 	styleTitle := chalk.Cyan.NewStyle().
@@ -358,7 +423,7 @@ func (p *Printer) printSearchHistoryInfo(index int, title string, time string) {
 		p.printInfo("", title)
 		fmt.Printf("[%v]", time)
 	} else {
-		fmt.Printf("%s%s%s\n", styleTitle, title, chalk.Reset)
+		fmt.Printf("%s%s (%s)%s\n", styleTitle, title, from, chalk.Reset)
 		fmt.Printf(" %s[%v]%s\n", styleTime, time, chalk.Reset)
 	}
 

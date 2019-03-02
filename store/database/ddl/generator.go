@@ -118,6 +118,9 @@ CREATE TABLE IF NOT EXISTS movies (
 ,movie_reviews TEXT
 ,movie_duration TEXT
 ,movie_released TEXT
+,movie_istvseries INTEGER
+,movie_seasons TEXT
+,movie_episodes TEXT
 ,movie_summary TEXT
 ,movie_metascore TEXT
 ,movie_review_count_user TEXT
@@ -168,7 +171,7 @@ CREATE TABLE IF NOT EXISTS movie_searches (
  search_id       INTEGER PRIMARY KEY AUTOINCREMENT
 ,search_movie_id INTEGER
 ,search_created  INTEGER
-,search_from     INTEGER
+,search_from     TEXT
 );
 `
 

@@ -17,6 +17,8 @@ var SampleMovie = &models.MovieInfo{
 	Votes:             "707,707",
 	Reviews:           "Reviews",
 	Duration:          "1h 48min",
+	Seasons:           "0",
+	Episodes:          "0",
 	Summary:           "Summary",
 	Metascore:         "65",
 	ReviewCountUser:   "7",
@@ -123,6 +125,33 @@ func TestMovie(t *testing.T) {
 					})
 				})
 
+				Convey("Find and Update the movie model in the database", func() {
+					exist, err := store.FindByTitle(noContext, SampleMovie.Title)
+					So(err, ShouldBeNil)
+
+					sampleUpdate := &models.MovieInfo{
+						ID:     exist.ID,
+						Title:  "Deadpool 3",
+						Year:   "202X",
+						Rating: "8.8/10",
+					}
+
+					err = store.Update(noContext, sampleUpdate)
+
+					So(err, ShouldBeNil)
+
+					updated, err := store.FindByTitle(noContext, sampleUpdate.Title)
+
+					So(err, ShouldBeNil)
+					So(updated, ShouldNotBeNil)
+
+					Convey("Test the updated movie model", func() {
+						So(updated.Title, ShouldEqual, sampleUpdate.Title)
+						So(updated.Year, ShouldEqual, sampleUpdate.Year)
+						So(updated.Rating, ShouldEqual, sampleUpdate.Rating)
+					})
+				})
+
 				Convey("Delete the movie model in the database", func() {
 					count, err := store.Count(noContext)
 
@@ -142,7 +171,7 @@ func TestMovie(t *testing.T) {
 			})
 
 			Convey("Create a Search model in the database", func() {
-				err := store.CreateSearch(noContext, SampleMovie)
+				err := store.CreateSearch(noContext, SampleMovie, "Test")
 
 				So(err, ShouldBeNil)
 

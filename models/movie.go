@@ -21,6 +21,9 @@ type MovieInfo struct {
 	Genres            []string
 	Duration          string
 	Released          string
+	IsTVSeries        bool
+	Seasons           string
+	Episodes          string
 	Summary           string
 	Credit            CreditInfo
 	Metascore         string
@@ -62,7 +65,7 @@ type MovieSearchInfo struct {
 	ID      int64
 	MovieID int64
 	Created int64
-	From    int64
+	From    string
 }
 
 //Load the struct from database table (movie_notes)
@@ -85,7 +88,7 @@ type MovieStore interface {
 	//Create movie info
 	Create(context.Context, *MovieInfo) error
 	//Create search history
-	CreateSearch(context.Context, *MovieInfo) error
+	CreateSearch(context.Context, *MovieInfo, string) error
 	//Create Movie Note Info
 	CreateNI(context.Context, *MovieInfo, *MovieNoteInfo) error
 	//Create likes and dislikes for the movie

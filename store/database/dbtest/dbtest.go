@@ -19,6 +19,11 @@ func Connect() (*database.DB, error) {
 func Reset(d *database.DB) error {
 	return d.Lock(func(tx database.Execer, _ database.Binder) error {
 		tx.Exec("DELETE FROM movies")
+		tx.Exec("DELETE FROM movie_watchlaters")
+		tx.Exec("DELETE FROM movie_searches")
+		tx.Exec("DELETE FROM movie_notes")
+		tx.Exec("DELETE FROM movie_learns")
+		tx.Exec("DELETE FROM movie_parentsguides")
 		return nil
 	})
 }

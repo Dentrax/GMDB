@@ -33,12 +33,12 @@ func (s *movieStore) Create(ctx context.Context, movie *models.MovieInfo) error 
 	})
 }
 
-func (s *movieStore) CreateSearch(ctx context.Context, movie *models.MovieInfo) error {
+func (s *movieStore) CreateSearch(ctx context.Context, movie *models.MovieInfo, from string) error {
 	return s.db.Lock(func(execer database.Execer, binder database.Binder) error {
 		params := map[string]interface{}{
 			"search_movie_id": movie.ID,
 			"search_created":  time.Now().Unix(),
-			"search_from":     1,
+			"search_from":     from,
 		}
 		query, args, err := binder.BindNamed(queryInsertSearch, params)
 		if err != nil {
@@ -397,6 +397,9 @@ INSERT INTO movies (
 ,movie_reviews
 ,movie_duration
 ,movie_released
+,movie_istvseries
+,movie_seasons
+,movie_episodes
 ,movie_summary
 ,movie_metascore
 ,movie_review_count_user
@@ -412,6 +415,9 @@ INSERT INTO movies (
 ,:movie_reviews
 ,:movie_duration
 ,:movie_released
+,:movie_istvseries
+,:movie_seasons
+,:movie_episodes
 ,:movie_summary
 ,:movie_metascore
 ,:movie_review_count_user
@@ -440,6 +446,9 @@ SELECT
 ,movie_reviews
 ,movie_duration
 ,movie_released
+,movie_istvseries
+,movie_seasons
+,movie_episodes
 ,movie_summary
 ,movie_metascore
 ,movie_review_count_user
@@ -540,6 +549,9 @@ SET
 ,movie_reviews             = :movie_reviews
 ,movie_duration            = :movie_duration
 ,movie_released            = :movie_released
+,movie_istvseries          = :movie_istvseries
+,movie_seasons             = :movie_seasons
+,movie_episodes            = :movie_episodes
 ,movie_summary             = :movie_summary
 ,movie_metascore           = :movie_metascore
 ,movie_review_count_user   = :movie_review_count_user

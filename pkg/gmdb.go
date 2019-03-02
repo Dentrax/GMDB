@@ -31,6 +31,7 @@ import (
 	"gmdb/store/movie"
 
 	"github.com/briandowns/spinner"
+	"github.com/ttacon/chalk"
 	"github.com/urfave/cli"
 )
 
@@ -57,10 +58,6 @@ func (a *App) Initialize(config *config.Config) {
 
 	a.DB = conn
 	a.Store.Movies = movie.New(conn)
-
-	//dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", "localhost", 1234, "dentrax", "1", "gmdb")
-
-	//a.DB = database.New("sqlite3", "db")
 }
 
 func StartSpinner(id int, speed int) {
@@ -111,12 +108,24 @@ func WaitInputIntFromCLI() int {
 }
 
 //Write an Ask(Y/N) question and wait an input
-func AskYNQuestion(question string, tries int, defaultInput bool) bool {
+func AskYNQuestion(question string, tries int, defaultInput bool, red bool) bool {
+	styleRed := chalk.Red.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
 	for ; tries > 0; tries-- {
 		if defaultInput {
-			fmt.Printf(":: %s [Y/n]", question)
+			if red {
+				fmt.Printf("%s:: %s [Y/n]%s", styleRed, question, chalk.Reset)
+			} else {
+				fmt.Printf(":: %s [Y/n]", question)
+			}
 		} else {
-			fmt.Printf(":: %s [y/N]", question)
+			if red {
+				fmt.Printf("%s:: %s [y/N]%s", styleRed, question, chalk.Reset)
+			} else {
+				fmt.Printf(":: %s [y/N]", question)
+			}
 		}
 
 		response := WaitInputStringFromCLI()
@@ -140,8 +149,155 @@ func AskYNQuestion(question string, tries int, defaultInput bool) bool {
 	return false
 }
 
-func (a *App) HandleNoteRequest(c *cli.Context) {
+func AskYNTorrentLegalUsage() bool {
+	legal := AskYNQuestion("I have read and agree to the LEGAL_DISCLAIMER.md for torrent usage.", 3, true, true)
+	return legal
+}
 
+func (a *App) HandleNoteRequest(c *cli.Context) {
+	request := new(models.NoteRequest)
+	request.NOP = true
+
+	historyRequest := new(models.HistoryRequest)
+	historyRequest.ScanSearches = true
+	historyRequest.ScanWatches = true
+
+	DefaultPrinter = services.NewHistoryPrinter(*historyRequest)
+
+	DefaultPrinter.PrintBanner()
+
+	StartSpinner(4, 100)
+
+	searches, err := a.Store.Movies.GetSearches(noContext)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	responses := []models.HistoryResponse{}
+
+	for i, data := range searches {
+		movie, err := a.Store.Movies.FindByID(noContext, data.MovieID)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		response := models.HistoryResponse{
+			Search:     *searches[i],
+			MovieTitle: movie.Title,
+			MovieYear:  movie.Year,
+		}
+
+		responses = append(responses, response)
+	}
+
+	StopSpinner()
+
+	DefaultPrinter.PrintHistoryResponses(responses)
+
+	fmt.Println("(Enter 'q' to exit)")
+
+	fmt.Printf("Please select your choice: ")
+	choiceMovie := WaitInputIntFromCLI()
+
+	if choiceMovie <= 0 || choiceMovie > len(responses) {
+		fmt.Printf("You must choose between %d and %d!", 1, len(responses))
+		os.Exit(2)
+	}
+
+	movie, err := a.Store.Movies.FindByTitle(noContext, responses[choiceMovie-1].MovieTitle)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
+
+	fmt.Printf("\nYou are selected: %s\n", movie.Title)
+	fmt.Println()
+
+	fmt.Println(" 1) Add new note")
+	fmt.Println(" 2) Get notes")
+
+	fmt.Printf("\nPlease select your operation: ")
+	choiceOperation := WaitInputIntFromCLI()
+
+	if choiceOperation <= 0 || choiceOperation > 2 {
+		fmt.Printf("You must choose between %d and %d!", 1, 2)
+		os.Exit(2)
+	}
+
+	fmt.Println()
+
+	if choiceOperation == 1 {
+		choiceSeason := 0
+		choiceEpisode := 0
+
+		if movie.IsTVSeries {
+			fmt.Printf("Enter Season: ")
+			choiceSeason = WaitInputIntFromCLI()
+
+			fmt.Printf("Enter Episode: ")
+			choiceEpisode = WaitInputIntFromCLI()
+		}
+
+		fmt.Printf("Enter the Hour: ")
+		choiceHour := WaitInputIntFromCLI()
+
+		fmt.Printf("Enter the Minute: ")
+		choiceMinute := WaitInputIntFromCLI()
+
+		fmt.Printf("Enter the Second: ")
+		choiceSecond := WaitInputIntFromCLI()
+
+		fmt.Printf("Enter the your Note: ")
+		text := WaitInputStringFromCLI()
+
+		note := models.MovieNoteInfo{
+			Season:  uint8(choiceSeason),
+			Episode: uint8(choiceEpisode),
+			Hour:    uint8(choiceHour),
+			Minute:  uint8(choiceMinute),
+			Second:  uint8(choiceSecond),
+			Text:    text,
+		}
+
+		err = a.Store.Movies.CreateNI(noContext, movie, &note)
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(2)
+		}
+
+		os.Exit(0)
+
+	} else if choiceOperation == 2 {
+		DefaultPrinter = services.NewNotePrinter(*request)
+
+		StartSpinner(4, 100)
+
+		responses := []models.NoteResponse{}
+
+		notes, err := a.Store.Movies.GetMovieNoteList(noContext)
+		if err != nil {
+			fmt.Println(err)
+		}
+		for i, data := range notes {
+			movie, err := a.Store.Movies.FindByID(noContext, data.MovieID)
+			if err != nil {
+				fmt.Println(err)
+			}
+			response := models.NoteResponse{
+				Note:       *notes[i],
+				MovieTitle: movie.Title,
+				MovieYear:  movie.Year,
+			}
+			responses = append(responses, response)
+		}
+
+		StopSpinner()
+
+		DefaultPrinter.PrintNoteResponses(responses)
+
+		os.Exit(2)
+	}
 }
 
 func (a *App) HandleHistoryRequest(c *cli.Context) {
@@ -284,13 +440,27 @@ func (a *App) HandleLearnRequest(c *cli.Context) {
 	fmt.Println(learn.Success)
 }
 
-func (a *App) HandleTorrentRequest(c *cli.Context) {
+func (a *App) HandleTorrentRequest(c *cli.Context, movie *models.MovieInfo) {
 	request := new(models.SearchTorrentRequest)
-	request.Title = strings.Join(c.Args(), "+")
 
-	DefaultPrinter = services.NewTorrentPrinter(UseNoResultFilter(), *request)
+	if c != nil && movie == nil {
+		request.Title = strings.Join(c.Args(), "+")
 
-	DefaultPrinter.PrintBanner()
+		DefaultPrinter = services.NewTorrentPrinter(UseNoResultFilter(), *request)
+
+		DefaultPrinter.PrintBanner()
+	} else if movie != nil {
+		request.Title = movie.Title + " " + movie.Year
+
+		DefaultPrinter = services.NewTorrentPrinter(UseNoResultFilter(), *request)
+	} else {
+		fmt.Println("Wrong call")
+		os.Exit(2)
+	}
+
+	if !AskYNTorrentLegalUsage() {
+		os.Exit(0)
+	}
 
 	StartSpinner(4, 100)
 
@@ -333,7 +503,20 @@ func (a *App) HandleTorrentRequest(c *cli.Context) {
 			fmt.Println("\nGetting information...")
 			fmt.Println()
 
-			//a.AddToSearchHistoryDB(movie.Info)
+			year := strconv.Itoa(responses[0].Searches[choice].Info.Year)
+
+			season := responses[0].Searches[choice].Info.Season
+			episode := responses[0].Searches[choice].Info.Episode
+
+			isTVSeies := season > 0 || episode > 0
+
+			movie := models.MovieInfo{
+				Title:      responses[0].Searches[choice].Info.Title,
+				Year:       year,
+				IsTVSeries: isTVSeies,
+			}
+
+			err := a.AddToSearchHistoryDB(movie, "Torrent")
 
 			magnet, err := engine.GetMagnet(&responses[0].Searches[choice])
 			if err != nil {
@@ -480,7 +663,10 @@ func (a *App) HandleSearchTitleRequest(c *cli.Context) {
 			//Print the movie info that we had get above
 			DefaultPrinter.PrintMovie(*movie)
 
-			a.AddToSearchHistoryDB(movie.Info)
+			err := a.AddToSearchHistoryDB(movie.Info, "Search")
+			if err != nil {
+				fmt.Println(err)
+			}
 
 			var watched = false
 			if len(movie.Info.URLTrailerIMDB) > 0 {
@@ -500,7 +686,7 @@ func (a *App) HandleSearchTitleRequest(c *cli.Context) {
 func HandleWatchMovie(url string) bool {
 	fmt.Println()
 
-	watch := AskYNQuestion("Do you want to watch Trailer?", 3, true)
+	watch := AskYNQuestion("Do you want to watch Trailer?", 3, true, false)
 
 	if watch {
 		fmt.Printf("MPV Player loading...: %s", url)
@@ -523,7 +709,7 @@ func HandleWatchMovie(url string) bool {
 }
 
 func HandleWatchTorrentMagnet(magnet string) bool {
-	watch := AskYNQuestion("Do you want to watch Movie using Peerflix?", 3, true)
+	watch := AskYNQuestion("Do you want to watch Movie using Peerflix?", 3, true, false)
 
 	if watch {
 		rgxMagnet, _ := regexp.Compile("magnet:\\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]{32,40}")
@@ -551,37 +737,53 @@ func (a *App) PostTrailerOperations(info models.MovieInfo, watched bool) {
 	var likedMovie bool
 
 	if watched {
-		likedTrailer = AskYNQuestion("Did you like the Trailer?", 3, true)
+		likedTrailer = AskYNQuestion("Did you like the Trailer?", 3, true, false)
 	}
 
-	watchedBefore := AskYNQuestion("Did you watch this movie before?", 3, false)
+	watchedBefore := AskYNQuestion("Did you watch this movie before?", 3, false, false)
 
 	if watchedBefore {
-		likedMovie = AskYNQuestion("Did you like this movie?", 3, true)
+		likedMovie = AskYNQuestion("Did you like this movie?", 3, true, false)
 
 		err := a.AddToMovieLikeDB(info, likedMovie)
 		if err != nil {
 			fmt.Println(err)
 		}
+	}
+	watchNow := AskYNQuestion("Do you want to watch this movie now?", 3, true, false)
+	if watchNow {
+
+		a.HandleTorrentRequest(nil, &info)
+
+		request := new(models.SearchTorrentRequest)
+		request.Title = info.Title + " " + info.Year
+
+		DefaultPrinter = services.NewTorrentPrinter(UseNoResultFilter(), *request)
+
+		if !AskYNTorrentLegalUsage() {
+			os.Exit(0)
+		}
+
+		StartSpinner(4, 100)
+
+		engine := torrent.New("1337x.to", *request)
+
+		response := engine.SearchTorrent(request)
+
+		responses := []models.SearchTorrentResponse{}
+		responses = append(responses, *response)
+
+		StopSpinner()
+
+		DefaultPrinter.PrintTorrentResponses(0, 10, false, responses)
+
 	} else {
-		watchNow := AskYNQuestion("Do you want to watch this movie now?", 3, true)
-		if watchNow {
+		watchlater := AskYNQuestion("Do you want to add this movie to Watch Later list?", 3, true, false)
 
-			request := new(models.SearchTorrentRequest)
-			request.Title = info.Title
-
-			t := torrent.New("asd", *request)
-			resp := t.SearchTorrent(request)
-			fmt.Println(resp)
-
-		} else {
-			watchlater := AskYNQuestion("Do you want to add this movie to Watch Later list?", 3, true)
-
-			if watchlater {
-				err := a.AddToWatchLaterDB(info)
-				if err != nil {
-					fmt.Println(err)
-				}
+		if watchlater {
+			err := a.AddToWatchLaterDB(info)
+			if err != nil {
+				fmt.Println(err)
 			}
 		}
 	}
@@ -604,7 +806,7 @@ func (a *App) AddToWatchLaterDB(info models.MovieInfo) error {
 	return err
 }
 
-func (a *App) AddToSearchHistoryDB(info models.MovieInfo) error {
+func (a *App) AddToSearchHistoryDB(info models.MovieInfo, from string) error {
 	exist, err := a.Store.Movies.FindByTitle(noContext, info.Title)
 	if exist.ID == 0 {
 		err := a.Store.Movies.Create(noContext, &info)
@@ -615,12 +817,17 @@ func (a *App) AddToSearchHistoryDB(info models.MovieInfo) error {
 		if err != nil {
 			return err
 		}
-		err = a.Store.Movies.CreateSearch(noContext, added)
+		err = a.Store.Movies.CreateSearch(noContext, added, from)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = a.Store.Movies.CreateSearch(noContext, exist)
+		info.ID = exist.ID
+		err := a.Store.Movies.Update(noContext, &info)
+		if err != nil {
+			return err
+		}
+		err = a.Store.Movies.CreateSearch(noContext, exist, from)
 		if err != nil {
 			return err
 		}

@@ -29,14 +29,17 @@ func TestIMDBParseMovieInfo(t *testing.T) {
 	}{
 		{"deadpool", "home.html",
 			&models.MovieInfo{
-				Title:    "Deadpool (2016)",
-				Year:     "(2016)",
-				Rating:   "8.0/10",
-				Votes:    "779,471",
-				Genres:   []string{"Action", "Adventure", "Comedy"},
-				Duration: "1h 48min",
-				Released: "12 February 2016 (Turkey)",
-				Summary:  "A fast-talking mercenary with a morbid sense of humor is subjected to a rogue experiment that leaves him with accelerated healing powers and a quest for revenge.",
+				Title:      "Deadpool",
+				Year:       "2016",
+				Rating:     "8.0/10",
+				Votes:      "779,471",
+				Genres:     []string{"Action", "Adventure", "Comedy"},
+				Duration:   "1h 48min",
+				Released:   "12 February 2016 (Turkey)",
+				IsTVSeries: false,
+				Seasons:    "0",
+				Episodes:   "0",
+				Summary:    "A fast-talking mercenary with a morbid sense of humor is subjected to a rogue experiment that leaves him with accelerated healing powers and a quest for revenge.",
 				Credit: models.CreditInfo{
 					Directors: []string{"Tim Miller"},
 					Writers:   []string{"Rhett Reese", "Paul Wernick"},
@@ -49,14 +52,17 @@ func TestIMDBParseMovieInfo(t *testing.T) {
 		},
 		{"ghostbusters", "home.html",
 			&models.MovieInfo{
-				Title:    "Ghost Busters (1984)",
-				Year:     "(1984)",
-				Rating:   "7.8/10",
-				Votes:    "314,760",
-				Genres:   []string{"Action", "Comedy", "Fantasy"},
-				Duration: "1h 45min",
-				Released: "8 June 1984 (USA)",
-				Summary:  "Three former parapsychology professors set up shop as a unique ghost removal service.",
+				Title:      "Ghost Busters",
+				Year:       "1984",
+				Rating:     "7.8/10",
+				Votes:      "314,760",
+				Genres:     []string{"Action", "Comedy", "Fantasy"},
+				Duration:   "1h 45min",
+				Released:   "8 June 1984 (USA)",
+				IsTVSeries: false,
+				Seasons:    "0",
+				Episodes:   "0",
+				Summary:    "Three former parapsychology professors set up shop as a unique ghost removal service.",
 				Credit: models.CreditInfo{
 					Directors: []string{"Ivan Reitman"},
 					Writers:   []string{"Dan Aykroyd", "Harold Ramis"},
@@ -69,18 +75,43 @@ func TestIMDBParseMovieInfo(t *testing.T) {
 		},
 		{"replicas", "home.html",
 			&models.MovieInfo{
-				Title:    "Replicas (2018)",
-				Year:     "(2018)",
-				Rating:   "6.1/10",
-				Votes:    "726",
-				Genres:   []string{"Crime", "Mystery", "Sci-Fi"},
-				Duration: "1h 47min",
-				Released: "23 November 2018 (China)",
-				Summary:  "A scientist becomes obsessed with bringing back his family members who died in a traffic accident.",
+				Title:      "Replicas",
+				Year:       "2018",
+				Rating:     "6.1/10",
+				Votes:      "726",
+				Genres:     []string{"Crime", "Mystery", "Sci-Fi"},
+				Duration:   "1h 47min",
+				Released:   "23 November 2018 (China)",
+				IsTVSeries: false,
+				Seasons:    "0",
+				Episodes:   "0",
+				Summary:    "A scientist becomes obsessed with bringing back his family members who died in a traffic accident.",
 				Credit: models.CreditInfo{
 					Directors: []string{"Jeffrey Nachmanoff"},
 					Writers:   []string{"Chad St. John", "Stephen Hamel"},
 					Stars:     []string{"Keanu Reeves", "Alice Eve", "Emily Alyn Lind"},
+				},
+				Metascore:         "",
+				ReviewCountUser:   "",
+				ReviewCountCritic: "",
+			},
+		},
+		{"The100", "home.html",
+			&models.MovieInfo{
+				Title:      "The 100",
+				Year:       "2014",
+				Rating:     "7.8/10",
+				Votes:      "169,134",
+				Genres:     []string{"Drama", "Mystery", "Sci-Fi"},
+				Duration:   "43min",
+				Released:   "TV Series (2014– )",
+				IsTVSeries: true,
+				Seasons:    "6",
+				Episodes:   "84",
+				Summary:    "Set ninety-seven years after a nuclear war has destroyed civilization, when a spaceship housing humanity's lone survivors sends one hundred juvenile delinquents back to Earth, in hopes of possibly re-populating the planet.",
+				Credit: models.CreditInfo{
+					Directors: []string{"Jason Rothenberg"},
+					Stars:     []string{"Eliza Taylor", "Bob Morley", "Marie Avgeropoulos"},
 				},
 				Metascore:         "",
 				ReviewCountUser:   "",
@@ -128,6 +159,12 @@ func TestIMDBParseMovieInfo(t *testing.T) {
 				So(current.Released, ShouldEqual, data.Info.Released)
 
 				So(current.Genres, ShouldHaveLength, len(data.Info.Genres))
+
+				So(current.IsTVSeries, ShouldEqual, data.Info.IsTVSeries)
+
+				So(current.Seasons, ShouldEqual, data.Info.Seasons)
+
+				So(current.Episodes, ShouldEqual, data.Info.Episodes)
 
 				So(current.Summary, ShouldNotBeBlank)
 				So(current.Summary, ShouldEqual, data.Info.Summary)

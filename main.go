@@ -358,7 +358,7 @@ func main() {
 				}
 				gmdb := &gmdb.App{}
 				gmdb.Initialize(config)
-				gmdb.HandleTorrentRequest(c)
+				gmdb.HandleTorrentRequest(c, nil)
 				return nil
 			},
 			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
