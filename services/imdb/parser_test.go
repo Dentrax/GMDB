@@ -9,12 +9,13 @@ package imdb
 
 import (
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 
 	"gmdb/models"
 	"gmdb/services/common"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 const PATH_TEST = "../../testdata/IMDB/"
@@ -88,84 +89,60 @@ func TestIMDBParseMovieInfo(t *testing.T) {
 		},
 	}
 
-	for _, data := range testDatas {
-		currentTestPath := PATH_TEST + data.FolderName
-		currentTestHome := currentTestPath + "/" + data.File
+	Convey("[ParseMovieInfo:IMDB]: Parse movie info", t, func() {
+		for _, data := range testDatas {
+			currentTestPath := PATH_TEST + data.FolderName
+			currentTestHome := currentTestPath + "/" + data.File
 
-		fileHome, err1 := os.Open(currentTestHome)
-		if err1 != nil {
-			t.Errorf("[Test::ParseMovieInfo]: File %s open error: %s", currentTestHome, err1)
-		}
-		defer fileHome.Close()
+			file, err := os.Open(currentTestHome)
 
-		info := ParseMovieInfo(services.GetDocumentFromFile(currentTestHome))
+			So(file, ShouldNotBeNil)
+			So(err, ShouldBeNil)
 
-		testName := strings.ToUpper(data.FolderName)
+			defer file.Close()
 
-		expectedTitle := data.Info.Title
-		actualTitle := info.Title
-		if !reflect.DeepEqual(expectedTitle, actualTitle) {
-			t.Errorf("[Test::%s::MI::Title]: Expected: '%s', Actual: '%s'", testName, expectedTitle, actualTitle)
-		}
+			current := ParseMovieInfo(services.GetDocumentFromFile(currentTestHome))
+			testName := strings.ToUpper(data.FolderName)
 
-		expectedYear := data.Info.Year
-		actualYear := info.Year
-		if !reflect.DeepEqual(expectedYear, actualYear) {
-			t.Errorf("[Test::%s::MI::Year]: Expected: '%s', Actual: '%s'", testName, expectedYear, actualYear)
-		}
+			So(current, ShouldNotBeNil)
 
-		expectedRating := data.Info.Rating
-		actualRating := info.Rating
-		if !reflect.DeepEqual(expectedRating, actualRating) {
-			t.Errorf("[Test::%s::MI::Rating]: Expected: '%s', Actual: '%s'", testName, expectedRating, actualRating)
-		}
+			Convey("Testing movie: "+testName, func() {
+				So(current, ShouldNotBeNil)
 
-		expectedVotes := data.Info.Votes
-		actualVotes := info.Votes
-		if !reflect.DeepEqual(expectedVotes, actualVotes) {
-			t.Errorf("[Test::%s::MI::Votes]: Expected: '%s', Actual: '%s'", testName, expectedVotes, actualVotes)
-		}
+				So(current.Title, ShouldNotBeBlank)
+				So(current.Title, ShouldEqual, data.Info.Title)
 
-		expectedDuration := data.Info.Duration
-		actualDuration := info.Duration
-		if !reflect.DeepEqual(expectedDuration, actualDuration) {
-			t.Errorf("[Test::%s::MI::Duration]: Expected: '%s', Actual: '%s'", testName, expectedDuration, actualDuration)
-		}
+				So(current.Year, ShouldNotBeBlank)
+				So(current.Year, ShouldEqual, data.Info.Year)
 
-		expectedReleased := data.Info.Released
-		actualReleased := info.Released
-		if !reflect.DeepEqual(expectedReleased, actualReleased) {
-			t.Errorf("[Test::%s::MI::Released]: Expected: '%s', Actual: '%s'", testName, expectedReleased, actualReleased)
-		}
+				So(current.Rating, ShouldNotBeBlank)
+				So(current.Rating, ShouldEqual, data.Info.Rating)
 
-		expectedGenres := data.Info.Genres
-		actualGenres := info.Genres
-		if !reflect.DeepEqual(expectedGenres, actualGenres) {
-			t.Errorf("[Test::%s::MI::Genres]: Expected: '%s', Actual: '%s'", testName, expectedGenres, actualGenres)
-		}
+				So(current.Votes, ShouldNotBeBlank)
+				So(current.Votes, ShouldEqual, data.Info.Votes)
 
-		expectedSummary := data.Info.Summary
-		actualSummary := info.Summary
-		if !reflect.DeepEqual(expectedSummary, actualSummary) {
-			t.Errorf("[Test::%s::MI::Summary]: Expected: '%s', Actual: '%s'", testName, expectedSummary, actualSummary)
-		}
+				So(current.Duration, ShouldNotBeBlank)
+				So(current.Duration, ShouldEqual, data.Info.Duration)
 
-		expectedCreditDirectors := data.Info.Credit.Directors
-		actualCreditDirectors := info.Credit.Directors
-		if !reflect.DeepEqual(expectedCreditDirectors, actualCreditDirectors) {
-			t.Errorf("[Test::%s::MI::Directors]: Expected: '%s', Actual: '%s'", testName, expectedCreditDirectors, actualCreditDirectors)
+				So(current.Released, ShouldNotBeBlank)
+				So(current.Released, ShouldEqual, data.Info.Released)
+
+				So(current.Genres, ShouldHaveLength, len(data.Info.Genres))
+
+				So(current.Summary, ShouldNotBeBlank)
+				So(current.Summary, ShouldEqual, data.Info.Summary)
+
+				So(current.Credit.Directors, ShouldHaveLength, len(data.Info.Credit.Directors))
+				So(current.Credit.Directors, ShouldResemble, data.Info.Credit.Directors)
+
+				So(current.Credit.Writers, ShouldHaveLength, len(data.Info.Credit.Writers))
+				So(current.Credit.Writers, ShouldResemble, data.Info.Credit.Writers)
+
+				So(current.Credit.Stars, ShouldHaveLength, len(data.Info.Credit.Stars))
+				So(current.Credit.Stars, ShouldResemble, data.Info.Credit.Stars)
+			})
 		}
-		expectedCreditWriters := data.Info.Credit.Writers
-		actualCreditWriters := info.Credit.Writers
-		if !reflect.DeepEqual(expectedCreditWriters, actualCreditWriters) {
-			t.Errorf("[Test::%s::MI::Writers]: Expected: '%s', Actual: '%s'", testName, expectedCreditWriters, actualCreditWriters)
-		}
-		expectedCreditStars := data.Info.Credit.Stars
-		actualCreditStars := info.Credit.Stars
-		if !reflect.DeepEqual(expectedCreditStars, actualCreditStars) {
-			t.Errorf("[Test::%s::MI::Stars]: Expected: '%s', Actual: '%s'", testName, expectedCreditStars, actualCreditStars)
-		}
-	}
+	})
 }
 
 func TestIMDBParseTagline(t *testing.T) {
@@ -208,35 +185,34 @@ func TestIMDBParseTagline(t *testing.T) {
 			},
 		},
 	}
-	for _, data := range testDatas {
-		currentTestPath := PATH_TEST + data.FolderName
-		currentTestFile := currentTestPath + "/" + data.File
 
-		file, err := os.Open(currentTestFile)
-		if err != nil {
-			t.Errorf("[Test::Tagline]: File %s open error: %s", currentTestFile, err)
+	Convey("[ParseTagLine:IMDB]: Parse lag line", t, func() {
+		for _, data := range testDatas {
+			currentTestPath := PATH_TEST + data.FolderName
+			currentTestFile := currentTestPath + "/" + data.File
+
+			file, err := os.Open(currentTestFile)
+
+			So(file, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+
+			defer file.Close()
+
+			current := ParseTagline(services.GetDocumentFromFile(currentTestFile))
+			testName := strings.ToUpper(data.FolderName)
+
+			So(current, ShouldNotBeNil)
+
+			Convey("Testing movie: "+testName, func() {
+
+				So(current.Tags, ShouldHaveLength, len(data.Info.Tags))
+
+				for i := 0; i < len(current.Tags); i++ {
+					So(current.Tags[i], ShouldResemble, data.Info.Tags[i])
+				}
+			})
 		}
-		defer file.Close()
-
-		info := ParseTagline(services.GetDocumentFromFile(currentTestFile))
-
-		testName := strings.ToUpper(data.FolderName)
-
-		expectedTagsCount := len(data.Info.Tags)
-		actualTagsCount := len(info.Tags)
-		if !reflect.DeepEqual(expectedTagsCount, actualTagsCount) {
-			t.Errorf("[Test::%s::TL::Count]: Expected: '%d', Actual: '%d'", testName, expectedTagsCount, actualTagsCount)
-		}
-
-		for i := 0; i < expectedTagsCount; i++ {
-			expectedTag := data.Info.Tags[i]
-			actualTag := info.Tags[i]
-
-			if !reflect.DeepEqual(expectedTag, actualTag) {
-				t.Errorf("[Test::%s::TL::Tag]: Expected: '%s', Actual: '%s'", testName, expectedTag, actualTag)
-			}
-		}
-	}
+	})
 }
 
 func TestIMDBParsePlotSummary(t *testing.T) {
@@ -271,45 +247,38 @@ func TestIMDBParsePlotSummary(t *testing.T) {
 			},
 		},
 	}
-	for _, data := range testDatas {
-		currentTestPath := PATH_TEST + data.FolderName
-		currentTestFile := currentTestPath + "/" + data.File
 
-		file, err := os.Open(currentTestFile)
-		if err != nil {
-			t.Errorf("[Test::PlotSummary]: File %s open error: %s", currentTestFile, err)
+	Convey("[ParsePlotSummary:IMDB]: Parse plot summary", t, func() {
+		for _, data := range testDatas {
+			currentTestPath := PATH_TEST + data.FolderName
+			currentTestFile := currentTestPath + "/" + data.File
+
+			file, err := os.Open(currentTestFile)
+
+			So(file, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+
+			defer file.Close()
+
+			current := ParsePlotSummary(services.GetDocumentFromFile(currentTestFile))
+			testName := strings.ToUpper(data.FolderName)
+
+			So(current, ShouldNotBeNil)
+
+			Convey("Testing movie: "+testName, func() {
+				So(current.Total-1, ShouldEqual, data.Info.Total)
+				So(data.Info.Total, ShouldEqual, len(data.Info.Summaries))
+
+				for i := uint(0); i < data.Info.Total; i++ {
+					So(current.Summaries[i].Author, ShouldNotBeBlank)
+					So(current.Summaries[i].Author, ShouldEqual, data.Info.Summaries[i].Author)
+
+					So(current.Summaries[i].Text, ShouldNotBeBlank)
+					So(current.Summaries[i].Text, ShouldEqual, data.Info.Summaries[i].Text)
+				}
+			})
 		}
-		defer file.Close()
-
-		info := ParsePlotSummary(services.GetDocumentFromFile(currentTestFile))
-
-		testName := strings.ToUpper(data.FolderName)
-
-		expectedTotal := data.Info.Total
-		actualTotal := info.Total - 1
-		if !reflect.DeepEqual(expectedTotal, actualTotal) {
-			t.Errorf("[Test::%s::PS::Total]: Expected: '%d', Actual: '%d'", testName, expectedTotal, actualTotal)
-		}
-
-		if data.Info.Total != uint(len(data.Info.Summaries)) {
-			t.Errorf("[Test::%s::PS::MatchArrayCount]: Expected: '%d', Actual: '%d'", testName, actualTotal, len(data.Info.Summaries))
-		}
-
-		for i := uint(0); i < expectedTotal; i++ {
-			expectedAuthor := data.Info.Summaries[i].Author
-			actualAuthor := info.Summaries[i].Author
-			if !reflect.DeepEqual(expectedAuthor, actualAuthor) {
-				t.Errorf("[Test::%s::PS::Author]: Expected: '%s', Actual: '%s'", testName, expectedAuthor, actualAuthor)
-			}
-
-			expectedText := data.Info.Summaries[i].Text
-			actualText := info.Summaries[i].Text
-			if !reflect.DeepEqual(expectedText, actualText) {
-				t.Errorf("[Test::%s::PS::Text]: Expected: '%s', Actual: '%s'", testName, expectedText, actualText)
-			}
-
-		}
-	}
+	})
 }
 
 func TestIMDBParsePlotKeywords(t *testing.T) {
@@ -358,38 +327,35 @@ func TestIMDBParsePlotKeywords(t *testing.T) {
 		},
 	}
 
-	for _, data := range testDatas {
-		currentTestPath := PATH_TEST + data.FolderName
-		currentTestFile := currentTestPath + "/" + data.File
+	Convey("[ParsePlotKeywords:IMDB]: Parse plot keywords", t, func() {
+		for _, data := range testDatas {
+			currentTestPath := PATH_TEST + data.FolderName
+			currentTestFile := currentTestPath + "/" + data.File
 
-		file, err := os.Open(currentTestFile)
-		if err != nil {
-			t.Errorf("[Test::PlotKeywords]: File %s open error: %s", currentTestFile, err)
-		}
-		defer file.Close()
+			file, err := os.Open(currentTestFile)
 
-		info := ParsePlotKeywords(services.GetDocumentFromFile(currentTestFile))
+			So(file, ShouldNotBeNil)
+			So(err, ShouldBeNil)
 
-		testName := strings.ToUpper(data.FolderName)
+			defer file.Close()
 
-		expectedTotal := data.Info.Total
-		actualTotal := info.Total
-		if !reflect.DeepEqual(expectedTotal, actualTotal) {
-			t.Errorf("[Test::%s::PK::Total]: Expected: '%d', Actual: '%d'", testName, expectedTotal, actualTotal)
-		}
+			current := ParsePlotKeywords(services.GetDocumentFromFile(currentTestFile))
+			testName := strings.ToUpper(data.FolderName)
 
-		var Top10 = 10
+			So(current, ShouldNotBeNil)
 
-		if info.Total != 0 {
-			for i := 0; i < Top10; i++ {
-				expectedKeyword := data.Info.Keywords[i]
-				actualKeyword := info.Keywords[i]
-				if !reflect.DeepEqual(expectedKeyword, actualKeyword) {
-					t.Errorf("[Test::%s::PK::Keyword]: Expected: '%s', Actual: '%s'", testName, expectedKeyword, actualKeyword)
+			Convey("Testing movie: "+testName, func() {
+				So(current.Total, ShouldEqual, data.Info.Total)
+
+				if current.Total > 0 {
+					for i := 0; i < 10; i++ {
+						So(current.Keywords[i], ShouldResemble, data.Info.Keywords[i])
+					}
 				}
-			}
+			})
+
 		}
-	}
+	})
 }
 
 func TestIMDBParseParentsGuide(t *testing.T) {
@@ -426,48 +392,31 @@ func TestIMDBParseParentsGuide(t *testing.T) {
 			},
 		},
 	}
-	for _, data := range testDatas {
-		currentTestPath := PATH_TEST + data.FolderName
-		currentTestFile := currentTestPath + "/" + data.File
 
-		file, err := os.Open(currentTestFile)
-		if err != nil {
-			t.Errorf("[Test::ParentsGuide]: File %s open error: %s", currentTestFile, err)
+	Convey("[ParseParentsGuide:IMDB]: Parse parents guide", t, func() {
+		for _, data := range testDatas {
+			currentTestPath := PATH_TEST + data.FolderName
+			currentTestFile := currentTestPath + "/" + data.File
+
+			file, err := os.Open(currentTestFile)
+
+			So(file, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+
+			defer file.Close()
+
+			current := ParseParentsGuide(services.GetDocumentFromFile(currentTestFile))
+			testName := strings.ToUpper(data.FolderName)
+
+			So(current, ShouldNotBeNil)
+
+			Convey("Testing movie: "+testName, func() {
+				So(current.Nudity.FinalRate, ShouldEqual, data.Info.Nudity.FinalRate)
+				So(current.Violence.FinalRate, ShouldEqual, data.Info.Violence.FinalRate)
+				So(current.Profanity.FinalRate, ShouldEqual, data.Info.Profanity.FinalRate)
+				So(current.Alcohol.FinalRate, ShouldEqual, data.Info.Alcohol.FinalRate)
+				So(current.Frightening.FinalRate, ShouldEqual, data.Info.Frightening.FinalRate)
+			})
 		}
-		defer file.Close()
-
-		info := ParseParentsGuide(services.GetDocumentFromFile(currentTestFile))
-
-		testName := strings.ToUpper(data.FolderName)
-
-		expectedNudityFinal := data.Info.Nudity.FinalRate
-		actualNudityFinal := info.Nudity.FinalRate
-		if !reflect.DeepEqual(expectedNudityFinal, actualNudityFinal) {
-			t.Errorf("[Test::%s::PG::NudityFinalRate]: Expected: '%s', Actual: '%s'", testName, expectedNudityFinal, actualNudityFinal)
-		}
-
-		expectedViolenceFinal := data.Info.Violence.FinalRate
-		actualViolenceFinal := info.Violence.FinalRate
-		if !reflect.DeepEqual(expectedViolenceFinal, actualViolenceFinal) {
-			t.Errorf("[Test::%s::PG::ViolenceFinalRate]: Expected: '%s', Actual: '%s'", testName, expectedViolenceFinal, actualViolenceFinal)
-		}
-
-		expectedProfanityFinal := data.Info.Profanity.FinalRate
-		actualProfanityFinal := info.Profanity.FinalRate
-		if !reflect.DeepEqual(expectedProfanityFinal, actualProfanityFinal) {
-			t.Errorf("[Test::%s::PG::ProfanityFinalRate]: Expected: '%s', Actual: '%s'", testName, expectedProfanityFinal, actualProfanityFinal)
-		}
-
-		expectedAlcoholFinal := data.Info.Alcohol.FinalRate
-		actualAlcoholFinal := info.Alcohol.FinalRate
-		if !reflect.DeepEqual(expectedAlcoholFinal, actualAlcoholFinal) {
-			t.Errorf("[Test::%s::PG::AlcoholFinalRate]: Expected: '%s', Actual: '%s'", testName, expectedAlcoholFinal, actualAlcoholFinal)
-		}
-
-		expectedFrighteningFinal := data.Info.Frightening.FinalRate
-		actualFrighteningFinal := info.Frightening.FinalRate
-		if !reflect.DeepEqual(expectedFrighteningFinal, actualFrighteningFinal) {
-			t.Errorf("[Test::%s::PG::FrighteningFinalRate]: Expected: '%s', Actual: '%s'", testName, expectedFrighteningFinal, actualFrighteningFinal)
-		}
-	}
+	})
 }

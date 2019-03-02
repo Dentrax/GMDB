@@ -28,7 +28,7 @@ func main() {
 	app.Version = "0.0.0"
 	app.Compiled = time.Now()
 	app.Author = "Furkan Türkal"
-	app.Copyright = "(c) 2018 - Dentrax"
+	app.Copyright = "(c) 2019 - Dentrax"
 	app.Usage = "gmdb"
 	app.ArgsUsage = "[args and such]"
 	app.HideHelp = false
@@ -53,8 +53,164 @@ func main() {
 					Name:  "rottentomatoes, r",
 					Usage: "Search in RottenTomatoes",
 				},
+				cli.StringFlag{
+					Name:  "url, u",
+					Usage: "Usage u",
+				},
+
+				cli.StringFlag{
+					Name:  "search, s",
+					Usage: "Usage s",
+				},
+				cli.StringFlag{
+					Name:  "filename, f",
+					Usage: "Usage f",
+				},
+				cli.BoolFlag{
+					Name:  "title, ft",
+					Usage: "Filter the output by Title",
+				},
+				cli.BoolFlag{
+					Name:  "year, fy",
+					Usage: "Filter the output by Year",
+				},
+				cli.BoolFlag{
+					Name:  "released, fr",
+					Usage: "Filter the output by Released",
+				},
+				cli.BoolFlag{
+					Name:  "duration, fz",
+					Usage: "Filter the output by Duration",
+				},
+				cli.BoolFlag{
+					Name:  "summary, fk",
+					Usage: "Filter the output by Summary",
+				},
+				cli.BoolFlag{
+					Name:  "directors, fd",
+					Usage: "Filter the output by Directors",
+				},
+				cli.BoolFlag{
+					Name:  "writers, fw",
+					Usage: "Filter the output by Writers",
+				},
+				cli.BoolFlag{
+					Name:  "stars, fp",
+					Usage: "Filter the output by Stars",
+				},
+				cli.BoolFlag{
+					Name:  "genres, fg",
+					Usage: "Filter the output by Genres",
+				},
+				cli.BoolFlag{
+					Name:  "tagline, fT",
+					Usage: "Filter the output by Tagline",
+				},
+				cli.BoolFlag{
+					Name:  "summaries, fS",
+					Usage: "Filter the output by Summaries",
+				},
+				cli.BoolFlag{
+					Name:  "keywords, fK",
+					Usage: "Filter the output by Keywords",
+				},
+				cli.BoolFlag{
+					Name:  "parental, fP",
+					Usage: "Filter the output by Parental",
+				},
 			},
 			Action: func(c *cli.Context) error {
+				filter := models.ResultFilter{}
+				leastOne := false
+				if c.Bool("title") {
+					filter.Title = true
+					leastOne = true
+				}
+				if c.Bool("year") {
+					filter.Year = true
+					leastOne = true
+				}
+				if c.Bool("released") {
+					filter.Released = true
+					leastOne = true
+				}
+				if c.Bool("rating") {
+					filter.Rating = true
+					leastOne = true
+				}
+				if c.Bool("duratin") {
+					filter.Duration = true
+					leastOne = true
+				}
+				if c.Bool("summary") {
+					filter.Summary = true
+					leastOne = true
+				}
+				if c.Bool("directors") {
+					filter.Directors = true
+					leastOne = true
+				}
+				if c.Bool("writers") {
+					filter.Writers = true
+					leastOne = true
+				}
+				if c.Bool("stars") {
+					filter.Stars = true
+					leastOne = true
+				}
+				if c.Bool("genres") {
+					filter.Genres = true
+					leastOne = true
+				}
+				if c.Bool("tagline") {
+					filter.Tagline = true
+					leastOne = true
+				}
+				if c.Bool("summaries") {
+					filter.Summaries = true
+					leastOne = true
+				}
+				if c.Bool("parental") {
+					filter.ParentsGuide = true
+					leastOne = true
+				}
+				if c.Bool("keywords") {
+					filter.Keywords = true
+					leastOne = true
+				}
+				if c.Bool("all") {
+					filter.Title = true
+					filter.Year = true
+					filter.Released = true
+					filter.Rating = true
+					filter.Duration = true
+					filter.Summary = true
+					filter.Directors = true
+					filter.Writers = true
+					filter.Stars = true
+					filter.Genres = true
+					filter.Tagline = true
+					filter.Summaries = true
+					filter.Keywords = true
+					filter.ParentsGuide = true
+				} else {
+					if !leastOne {
+						filter.Title = true
+						filter.Year = true
+						filter.Released = true
+						filter.Rating = true
+						filter.Duration = true
+						filter.Summary = true
+						filter.Directors = true
+						filter.Writers = true
+						filter.Stars = true
+						filter.Genres = true
+						filter.Tagline = true
+						filter.Summaries = false
+						filter.Keywords = true
+						filter.ParentsGuide = true
+					}
+				}
 				if len(c.Args()) > 0 {
 					config, err := config.LoadConfig()
 					if err != nil {
@@ -168,20 +324,50 @@ func main() {
 				return err
 			},
 		},
+		cli.Command{
+			Name:        "note",
+			Usage:       "nt",
+			UsageText:   "nt text",
+			Description: "desc",
+			ArgsUsage:   "[arg]",
+			Action: func(c *cli.Context) error {
+				config, err := config.LoadConfig()
+				if err != nil {
+					return cli.NewExitError("Failed to load config", 1)
+				}
+				gmdb := &gmdb.App{}
+				gmdb.Initialize(config)
+				gmdb.HandleNoteRequest(c)
+				return nil
+			},
+			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
+				fmt.Fprintf(c.App.Writer, "Wrong usage: %q \n", err)
+				return err
+			},
+		},
+		cli.Command{
+			Name:        "torrent",
+			Usage:       "trrnt",
+			UsageText:   "trrnt text",
+			Description: "desc",
+			ArgsUsage:   "[arg]",
+			Action: func(c *cli.Context) error {
+				config, err := config.LoadConfig()
+				if err != nil {
+					return cli.NewExitError("Failed to load config", 1)
+				}
+				gmdb := &gmdb.App{}
+				gmdb.Initialize(config)
+				gmdb.HandleTorrentRequest(c)
+				return nil
+			},
+			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
+				fmt.Fprintf(c.App.Writer, "Wrong usage: %q \n", err)
+				return err
+			},
+		},
 	}
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "url, u",
-			Usage: "Usage u",
-		},
-		cli.StringFlag{
-			Name:  "search, s",
-			Usage: "Usage s",
-		},
-		cli.StringFlag{
-			Name:  "filename, f",
-			Usage: "Usage f",
-		},
 		cli.StringFlag{
 			Name:  "nobanner, q",
 			Usage: "Usage q",
@@ -190,64 +376,6 @@ func main() {
 			Name:  "nocolor, x",
 			Usage: "Usage x",
 		},
-
-		//For ResultFilter
-		cli.BoolFlag{
-			Name:  "all, a",
-			Usage: "Show all (ignores all other filters)",
-		},
-		cli.BoolFlag{
-			Name:  "title, ft",
-			Usage: "Filter the output by Title",
-		},
-		cli.BoolFlag{
-			Name:  "year, fy",
-			Usage: "Filter the output by Year",
-		},
-		cli.BoolFlag{
-			Name:  "released, fr",
-			Usage: "Filter the output by Released",
-		},
-		cli.BoolFlag{
-			Name:  "duration, fz",
-			Usage: "Filter the output by Duration",
-		},
-		cli.BoolFlag{
-			Name:  "summary, fk",
-			Usage: "Filter the output by Summary",
-		},
-		cli.BoolFlag{
-			Name:  "directors, fd",
-			Usage: "Filter the output by Directors",
-		},
-		cli.BoolFlag{
-			Name:  "writers, fw",
-			Usage: "Filter the output by Writers",
-		},
-		cli.BoolFlag{
-			Name:  "stars, fp",
-			Usage: "Filter the output by Stars",
-		},
-		cli.BoolFlag{
-			Name:  "genres, fg",
-			Usage: "Filter the output by Genres",
-		},
-		cli.BoolFlag{
-			Name:  "tagline, fT",
-			Usage: "Filter the output by Tagline",
-		},
-		cli.BoolFlag{
-			Name:  "summaries, fS",
-			Usage: "Filter the output by Summaries",
-		},
-		cli.BoolFlag{
-			Name:  "keywords, fK",
-			Usage: "Filter the output by Keywords",
-		},
-		cli.BoolFlag{
-			Name:  "parental, fP",
-			Usage: "Filter the output by Parental",
-		},
 	}
 	app.Action = func(c *cli.Context) error {
 		if len(c.Args()) == 0 {
@@ -255,98 +383,6 @@ func main() {
 		}
 
 		filter := models.ResultFilter{}
-		leastOne := false
-		if c.Bool("title") {
-			filter.Title = true
-			leastOne = true
-		}
-		if c.Bool("year") {
-			filter.Year = true
-			leastOne = true
-		}
-		if c.Bool("released") {
-			filter.Released = true
-			leastOne = true
-		}
-		if c.Bool("rating") {
-			filter.Rating = true
-			leastOne = true
-		}
-		if c.Bool("duratin") {
-			filter.Duration = true
-			leastOne = true
-		}
-		if c.Bool("summary") {
-			filter.Summary = true
-			leastOne = true
-		}
-		if c.Bool("directors") {
-			filter.Directors = true
-			leastOne = true
-		}
-		if c.Bool("writers") {
-			filter.Writers = true
-			leastOne = true
-		}
-		if c.Bool("stars") {
-			filter.Stars = true
-			leastOne = true
-		}
-		if c.Bool("genres") {
-			filter.Genres = true
-			leastOne = true
-		}
-		if c.Bool("tagline") {
-			filter.Tagline = true
-			leastOne = true
-		}
-		if c.Bool("summaries") {
-			filter.Summaries = true
-			leastOne = true
-		}
-		if c.Bool("parental") {
-			filter.ParentsGuide = true
-			leastOne = true
-		}
-		if c.Bool("keywords") {
-			filter.Keywords = true
-			leastOne = true
-		}
-		if c.Bool("all") {
-			filter.Title = true
-			filter.Year = true
-			filter.Released = true
-			filter.Rating = true
-			filter.Duration = true
-			filter.Summary = true
-			filter.Directors = true
-			filter.Writers = true
-			filter.Stars = true
-			filter.Genres = true
-			filter.Tagline = true
-			filter.Summaries = true
-			filter.Keywords = true
-			filter.ParentsGuide = true
-		} else {
-			if !leastOne {
-				filter.Title = true
-				filter.Year = true
-				filter.Released = true
-				filter.Rating = true
-				filter.Duration = true
-				filter.Summary = true
-				filter.Directors = true
-				filter.Writers = true
-				filter.Stars = true
-				filter.Genres = true
-				filter.Tagline = true
-				filter.Summaries = false
-				filter.Keywords = true
-				filter.ParentsGuide = true
-			}
-		}
-
-		//TODO: Usage explain
 
 		filter.NoBanner = false
 		filter.NoColor = false

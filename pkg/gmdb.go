@@ -25,6 +25,7 @@ import (
 	"gmdb/pkg/cache"
 	"gmdb/pkg/config"
 	"gmdb/services"
+	"gmdb/services/torrent"
 	"gmdb/store"
 	"gmdb/store/database"
 	"gmdb/store/movie"
@@ -137,6 +138,10 @@ func AskYNQuestion(question string, tries int, defaultInput bool) bool {
 	//Tries exceeded the limit and answer is weird?
 	os.Exit(2)
 	return false
+}
+
+func (a *App) HandleNoteRequest(c *cli.Context) {
+
 }
 
 func (a *App) HandleHistoryRequest(c *cli.Context) {
@@ -277,6 +282,81 @@ func (a *App) HandleLearnRequest(c *cli.Context) {
 	}
 
 	fmt.Println(learn.Success)
+}
+
+func (a *App) HandleTorrentRequest(c *cli.Context) {
+	request := new(models.SearchTorrentRequest)
+	request.Title = strings.Join(c.Args(), "+")
+
+	DefaultPrinter = services.NewTorrentPrinter(UseNoResultFilter(), *request)
+
+	DefaultPrinter.PrintBanner()
+
+	StartSpinner(4, 100)
+
+	engine := torrent.New("1337x.to", *request)
+
+	response := engine.SearchTorrent(request)
+
+	responses := []models.SearchTorrentResponse{}
+	responses = append(responses, *response)
+
+	StopSpinner()
+
+	DefaultPrinter.PrintTorrentResponses(0, 10, false, responses)
+
+	var maxChoice = 10 * len(responses)
+
+	isShowMoreOptionSelected := false
+
+	fmt.Println()
+	fmt.Println("(Enter 'q' to exit)")
+
+	for {
+		fmt.Printf("Please select your choice: ")
+
+		choice := WaitInputIntFromCLI()
+
+		if !isShowMoreOptionSelected && choice == 0 && len(responses) == 1 {
+			isShowMoreOptionSelected = true
+
+			//Print the other results that didn't show first
+			//Start Index: 10
+			//End Index: 250
+			//ShowMore Selected: true
+			DefaultPrinter.PrintTorrentResponses(10, 200, isShowMoreOptionSelected, responses)
+			continue
+
+		} else if (!isShowMoreOptionSelected && choice > 0 && choice <= maxChoice) ||
+			(isShowMoreOptionSelected && choice > 0 && choice <= 200) {
+
+			fmt.Println("\nGetting information...")
+			fmt.Println()
+
+			//a.AddToSearchHistoryDB(movie.Info)
+
+			magnet, err := engine.GetMagnet(&responses[0].Searches[choice])
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			var watched = false
+			if len(magnet) > 0 {
+				watched = HandleWatchTorrentMagnet(magnet)
+			}
+			if watched {
+
+			}
+
+			//a.PostTrailerOperations(movie.Info, watched)
+
+			break
+		} else {
+			os.Exit(0)
+		}
+	}
+
+	os.Exit(0)
 }
 
 //FIXME: Too long and hardcoded function, make it better
@@ -442,6 +522,30 @@ func HandleWatchMovie(url string) bool {
 	return watch
 }
 
+func HandleWatchTorrentMagnet(magnet string) bool {
+	watch := AskYNQuestion("Do you want to watch Movie using Peerflix?", 3, true)
+
+	if watch {
+		rgxMagnet, _ := regexp.Compile("magnet:\\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]{32,40}")
+		fmt.Println()
+		fmt.Printf("Peerflix: (MPV) Player loading...: %s", rgxMagnet.FindString(magnet))
+
+		cmd := exec.Command("/usr/bin/peerflix", "--mpv", magnet)
+
+		if err := cmd.Start(); err != nil {
+			fmt.Printf("Failed to start cmd: %v", err)
+			return false
+		}
+
+		if err := cmd.Wait(); err != nil {
+			fmt.Printf("Cmd returned error: %v", err)
+			return false
+		}
+	}
+
+	return watch
+}
+
 func (a *App) PostTrailerOperations(info models.MovieInfo, watched bool) {
 	var likedTrailer bool
 	var likedMovie bool
@@ -460,12 +564,24 @@ func (a *App) PostTrailerOperations(info models.MovieInfo, watched bool) {
 			fmt.Println(err)
 		}
 	} else {
-		watchlater := AskYNQuestion("Do you want to add this movie to Watch Later list?", 3, true)
+		watchNow := AskYNQuestion("Do you want to watch this movie now?", 3, true)
+		if watchNow {
 
-		if watchlater {
-			err := a.AddToWatchLaterDB(info)
-			if err != nil {
-				fmt.Println(err)
+			request := new(models.SearchTorrentRequest)
+			request.Title = info.Title
+
+			t := torrent.New("asd", *request)
+			resp := t.SearchTorrent(request)
+			fmt.Println(resp)
+
+		} else {
+			watchlater := AskYNQuestion("Do you want to add this movie to Watch Later list?", 3, true)
+
+			if watchlater {
+				err := a.AddToWatchLaterDB(info)
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
 		}
 	}

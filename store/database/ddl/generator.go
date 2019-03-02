@@ -179,6 +179,8 @@ CREATE TABLE IF NOT EXISTS movie_notes (
 ,note_created  INTEGER
 ,note_updated  INTEGER
 ,note_from     INTEGER
+,note_season   INTEGER
+,note_episode  INTEGER
 ,note_hour     INTEGER
 ,note_minute   INTEGER
 ,note_second   INTEGER

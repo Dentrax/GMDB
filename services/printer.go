@@ -14,12 +14,14 @@ import (
 
 	"gmdb/models"
 
+	"github.com/middelink/go-parse-torrent-name"
 	"github.com/ttacon/chalk"
 )
 
 type Printer struct {
 	Filter         models.ResultFilter
 	RequestSearch  models.SearchRequest
+	RequestTorrent models.SearchTorrentRequest
 	RequestHistory models.HistoryRequest
 	RequestMyList  models.MyListRequest
 }
@@ -28,6 +30,13 @@ func NewPrinter(filter models.ResultFilter, request models.SearchRequest) *Print
 	return &Printer{
 		Filter:        filter,
 		RequestSearch: request,
+	}
+}
+
+func NewTorrentPrinter(filter models.ResultFilter, request models.SearchTorrentRequest) *Printer {
+	return &Printer{
+		Filter:         filter,
+		RequestTorrent: request,
 	}
 }
 
@@ -52,9 +61,8 @@ func NewMyListPrinter(filter models.ResultFilter, request models.MyListRequest) 
 	}
 }
 
-func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, responses []models.SearchResponse) {
+func (p *Printer) PrintSearchResponses(min, max uint8, isMore bool, responses []models.SearchResponse) {
 	totalResponse := len(responses)
-
 	if totalResponse > 0 {
 		totalIndexCounter := 0
 		for i := 0; i < totalResponse; i++ {
@@ -86,6 +94,54 @@ func (p *Printer) PrintSearchResponses(min uint8, max uint8, isMore bool, respon
 						totalIndexCounter++
 						fmt.Printf("%2d) ", totalIndexCounter)
 						p.printInfo(responses[i].Searches[j].Title, responses[i].Searches[j].Year)
+					}
+				}
+				if len(responses) == 1 {
+					if totalResult > max {
+						if totalResult > 10 {
+							moreCount := len(responses[i].Searches) - 10
+							fmt.Printf("%2d) ", 0)
+							p.printInfo(fmt.Sprintf("%v", moreCount), "more...")
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func (p *Printer) PrintTorrentResponses(min, max uint8, isMore bool, responses []models.SearchTorrentResponse) {
+	totalResponse := len(responses)
+	if totalResponse > 0 {
+		totalIndexCounter := 0
+		for i := 0; i < totalResponse; i++ {
+			currEngine := responses[i].SearchEngine
+			totalResult := uint8(len(responses[i].Searches))
+
+			if totalResult > 0 {
+				if max > totalResult {
+					max = totalResult
+				}
+				if !isMore {
+					lime := chalk.Yellow.NewStyle().
+						WithBackground(chalk.Black).
+						WithTextStyle(chalk.Bold).
+						Style
+					fmt.Println()
+					fmt.Printf("From%v", " ")
+					fmt.Println(lime(currEngine))
+				}
+				filterCount := responses[i].Searches[min:max]
+				indexCounter := min
+				for j := range filterCount {
+					if isMore {
+						fmt.Printf("%2d) ", indexCounter+1)
+						p.printTorrentInfo(responses[i].Searches[indexCounter], responses[i].Searches[indexCounter].Info)
+						indexCounter++
+					} else {
+						totalIndexCounter++
+						fmt.Printf("%2d) ", totalIndexCounter)
+						p.printTorrentInfo(responses[i].Searches[j], responses[i].Searches[j].Info)
 					}
 				}
 				if len(responses) == 1 {
@@ -223,6 +279,68 @@ func (p *Printer) PrintMovie(movie models.Movie) {
 	} else {
 		fmt.Println()
 	}
+}
+
+func (p *Printer) printTorrentInfo(result models.SearchTorrentResult, info parsetorrentname.TorrentInfo) {
+	styleTitle := chalk.Cyan.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleTime := chalk.White.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Italic)
+
+	styleBlue := chalk.Blue.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleGreen := chalk.Green.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleRed := chalk.Red.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	if p.Filter.NoColor {
+		p.printInfo("", result.Name)
+	} else {
+		fmt.Printf("%s%s%s", styleTitle, info.Title, chalk.Reset)
+		if info.Year > 1000 {
+			fmt.Printf("(%s%d%s)", styleTitle, info.Year, chalk.Reset)
+		}
+
+		fmt.Println()
+		fmt.Printf("%s", " ")
+
+		if info.Season > 0 && info.Episode > 0 {
+			fmt.Printf("[%sS%02dE%02d%s]", styleBlue, info.Season, info.Episode, chalk.Reset)
+		}
+		fmt.Printf("[%sSE:%s %sLE:%s%s]", styleGreen, result.Seeders, styleRed, result.Leechers, chalk.Reset)
+		if len(info.Resolution) > 0 {
+			fmt.Printf("[%s%s%s]", styleTime, info.Resolution, chalk.Reset)
+		}
+		if len(info.Quality) > 0 {
+			fmt.Printf("[%s%s%s]", styleTime, info.Quality, chalk.Reset)
+		}
+		if len(info.Audio) > 0 {
+			fmt.Printf("[%s%s%s]", styleTime, info.Audio, chalk.Reset)
+		}
+		if len(info.Language) > 0 {
+			fmt.Printf("[%s%s%s]", styleBlue, info.Language, chalk.Reset)
+		}
+		if len(info.Codec) > 0 {
+			fmt.Printf("[%s%s%s]", styleTime, info.Codec, chalk.Reset)
+		}
+		if len(result.Size) > 0 {
+			fmt.Printf("[%s%s%s]", styleTime, result.Size, chalk.Reset)
+		}
+		if len(result.Uploader) > 0 {
+			fmt.Printf("[%s%s%s]", styleTime, result.Uploader, chalk.Reset)
+		}
+	}
+
+	fmt.Println()
 }
 
 func (p *Printer) printSearchHistoryInfo(index int, title string, time string) {

@@ -7,6 +7,8 @@
 
 package models
 
+import "github.com/middelink/go-parse-torrent-name"
+
 type ResultFilter struct {
 	NoBanner     bool
 	NoColor      bool
@@ -50,6 +52,32 @@ type SearchResult struct {
 type SearchResponse struct {
 	SearchEngine string
 	Searches     []SearchResult
+	Error        string
+	TotalFound   uint
+}
+
+type SearchTorrentRequest struct {
+	Title           string
+	Year            string
+	ResultLimit     int
+	ScanTorrentsCSV bool
+	Scan1337x       bool
+}
+
+type SearchTorrentResult struct {
+	Name     string
+	URL      string
+	Seeders  string
+	Leechers string
+	Date     string
+	Size     string
+	Uploader string
+	Info     parsetorrentname.TorrentInfo
+}
+
+type SearchTorrentResponse struct {
+	SearchEngine string
+	Searches     []SearchTorrentResult
 	Error        string
 	TotalFound   uint
 }

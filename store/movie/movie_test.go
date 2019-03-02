@@ -27,11 +27,13 @@ var SampleMovie = &models.MovieInfo{
 }
 
 var SampleMovieNote = &models.MovieNoteInfo{
-	From:   1,
-	Hour:   2,
-	Minute: 34,
-	Second: 44,
-	Text:   "My Awesome Note",
+	From:    1,
+	Season:  3,
+	Episode: 5,
+	Hour:    2,
+	Minute:  34,
+	Second:  44,
+	Text:    "My Awesome Note",
 }
 
 var noContext = context.TODO()
@@ -259,6 +261,8 @@ func TestMovie(t *testing.T) {
 					So(movieNI, ShouldNotBeNil)
 
 					Convey("Test the found NI model", func() {
+						So(movieNI.Season, ShouldEqual, SampleMovieNote.Season)
+						So(movieNI.Episode, ShouldEqual, SampleMovieNote.Episode)
 						So(movieNI.Hour, ShouldEqual, SampleMovieNote.Hour)
 						So(movieNI.Minute, ShouldEqual, SampleMovieNote.Minute)
 						So(movieNI.Second, ShouldEqual, SampleMovieNote.Second)
@@ -276,15 +280,31 @@ func TestMovie(t *testing.T) {
 
 				Convey("Update Movie Note model in the database", func() {
 					sampleUpdate := &models.MovieNoteInfo{
-						Hour:   2,
-						Minute: 43,
-						Second: 55,
-						Text:   "My Awesome Note Updated",
+						Season:  5,
+						Episode: 4,
+						Hour:    2,
+						Minute:  43,
+						Second:  55,
+						Text:    "My Awesome Note Updated",
 					}
 
 					err := store.UpdateNI(noContext, SampleMovie, sampleUpdate)
 
 					So(err, ShouldBeNil)
+
+					movieNI, err := store.FindNI(noContext, SampleMovie.ID)
+
+					So(err, ShouldBeNil)
+					So(movieNI, ShouldNotBeNil)
+
+					Convey("Test the updated NI model", func() {
+						So(movieNI.Season, ShouldEqual, sampleUpdate.Season)
+						So(movieNI.Episode, ShouldEqual, sampleUpdate.Episode)
+						So(movieNI.Hour, ShouldEqual, sampleUpdate.Hour)
+						So(movieNI.Minute, ShouldEqual, sampleUpdate.Minute)
+						So(movieNI.Second, ShouldEqual, sampleUpdate.Second)
+						So(movieNI.Text, ShouldEqual, sampleUpdate.Text)
+					})
 				})
 			})
 		})

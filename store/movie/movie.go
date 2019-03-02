@@ -61,6 +61,8 @@ func (s *movieStore) CreateNI(ctx context.Context, movie *models.MovieInfo, note
 			"note_created":  now,
 			"note_updated":  now,
 			"note_from":     note.From,
+			"note_season":   note.Season,
+			"note_episode":  note.Episode,
 			"note_hour":     note.Hour,
 			"note_minute":   note.Minute,
 			"note_second":   note.Second,
@@ -265,6 +267,8 @@ func (s *movieStore) UpdateNI(ctx context.Context, movie *models.MovieInfo, note
 		params := map[string]interface{}{
 			"note_movie_id": movie.ID,
 			"note_updated":  now,
+			"note_season":   note.Season,
+			"note_episode":  note.Episode,
 			"note_hour":     note.Hour,
 			"note_minute":   note.Minute,
 			"note_second":   note.Second,
@@ -452,6 +456,8 @@ SELECT
 ,note_created
 ,note_updated
 ,note_from
+,note_season
+,note_episode
 ,note_hour
 ,note_minute
 ,note_second
@@ -548,6 +554,8 @@ const queryUpdateNI = `
 UPDATE movie_notes
 SET
  note_updated = :note_updated
+,note_season  = :note_season
+,note_episode = :note_episode
 ,note_hour    = :note_hour
 ,note_minute  = :note_minute
 ,note_second  = :note_second
@@ -595,6 +603,8 @@ INSERT INTO movie_notes (
 ,note_created
 ,note_updated
 ,note_from
+,note_season
+,note_episode
 ,note_hour
 ,note_minute
 ,note_second
@@ -604,6 +614,8 @@ INSERT INTO movie_notes (
 ,:note_created
 ,:note_updated
 ,:note_from
+,:note_season
+,:note_episode
 ,:note_hour
 ,:note_minute
 ,:note_second

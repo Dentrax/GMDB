@@ -72,6 +72,8 @@ type MovieNoteInfo struct {
 	Created int64
 	Updated int64
 	From    int64
+	Season  uint8
+	Episode uint8
 	Hour    uint8
 	Minute  uint8
 	Second  uint8
