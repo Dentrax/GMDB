@@ -154,6 +154,85 @@ func AskYNTorrentLegalUsage() bool {
 	return legal
 }
 
+func (a *App) HandleUpdateRequest(c *cli.Context) {
+	request := new(models.UpdateRequest)
+	request.NOP = true
+
+	DefaultPrinter = services.NewUpdatePrinter(UseNoResultFilter(), *request)
+
+	DefaultPrinter.PrintBanner()
+
+	movies, err := a.Store.Movies.GetMovies(noContext)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	searchRequest := new(models.SearchRequest)
+	searchRequest.ScanIMDB = true
+
+	updateNow := AskYNQuestion("Do you wanna update movies now?", 3, true, false)
+	fmt.Println()
+
+	totalUpdated := 0
+
+	if updateNow {
+		for _, movie := range movies {
+			StartSpinner(4, 100)
+
+			title := strings.Replace(movie.Title, " ", "+", -1)
+			searchRequest.Title = title
+
+			imdb := *services.NewSearcher(*searchRequest)
+
+			responses := imdb.GetSearchResponses()
+
+			var res *models.Movie
+			res = imdb.GetMovie("IMDB", responses[0].Searches[0], true)
+			res.Info.Created = movie.Created
+
+			//Search until correct movie found (only guess)
+			//TODO: Find a better solution, this is so F-bad
+			if len(res.Info.Year) == 0 || len(res.Info.Released) == 0 || len(res.Info.Rating) == 0 || len(res.Info.Duration) == 0 {
+				for i, search := range responses[0].Searches {
+					next := imdb.GetMovie("IMDB", search, true)
+					next.Info.Created = movie.Created
+
+					if i <= 5 {
+						if len(next.Info.Year) != 0 && len(next.Info.Released) != 0 && len(next.Info.Rating) != 0 && len(next.Info.Duration) != 0 {
+							res = next
+							break
+						}
+					} else {
+						break
+					}
+				}
+			}
+
+			if strings.Compare(res.Info.Title, movie.Title) == 0 {
+				totalUpdated = totalUpdated + 1
+
+				a.AddToSearchHistoryDB(res.Info, "Update")
+
+				StopSpinner()
+				DefaultPrinter.PrintUpdateMovieSuccess(res.Info.Title)
+			} else {
+				StopSpinner()
+				DefaultPrinter.PrintUpdateMovieFailed(res.Info.Title, movie.Title)
+
+			}
+		}
+	}
+
+	StopSpinner()
+
+	if totalUpdated > 0 {
+		fmt.Println()
+		fmt.Printf("Movies updated successfuly: [%d/%d]\n", totalUpdated, len(movies))
+	}
+
+	os.Exit(0)
+}
+
 func (a *App) HandleNoteRequest(c *cli.Context) {
 	request := new(models.NoteRequest)
 	request.NOP = true
@@ -192,6 +271,11 @@ func (a *App) HandleNoteRequest(c *cli.Context) {
 
 	StopSpinner()
 
+	if len(responses) == 0 {
+		fmt.Printf("No movie found! Please update your movie list using 'update' before take a note.")
+		os.Exit(0)
+	}
+
 	DefaultPrinter.PrintHistoryResponses(responses)
 
 	fmt.Println("(Enter 'q' to exit)")
@@ -214,61 +298,36 @@ func (a *App) HandleNoteRequest(c *cli.Context) {
 	fmt.Println()
 
 	fmt.Println(" 1) Add new note")
-	fmt.Println(" 2) Get notes")
+	fmt.Println(" 2) Update a note")
+	fmt.Println(" 3) Get notes")
 
 	fmt.Printf("\nPlease select your operation: ")
 	choiceOperation := WaitInputIntFromCLI()
 
-	if choiceOperation <= 0 || choiceOperation > 2 {
-		fmt.Printf("You must choose between %d and %d!", 1, 2)
+	if choiceOperation <= 0 || choiceOperation > 3 {
+		fmt.Printf("You must choose between %d and %d!", 1, 3)
 		os.Exit(2)
 	}
 
 	fmt.Println()
 
 	if choiceOperation == 1 {
-		choiceSeason := 0
-		choiceEpisode := 0
-
-		if movie.IsTVSeries {
-			fmt.Printf("Enter Season: ")
-			choiceSeason = WaitInputIntFromCLI()
-
-			fmt.Printf("Enter Episode: ")
-			choiceEpisode = WaitInputIntFromCLI()
-		}
-
-		fmt.Printf("Enter the Hour: ")
-		choiceHour := WaitInputIntFromCLI()
-
-		fmt.Printf("Enter the Minute: ")
-		choiceMinute := WaitInputIntFromCLI()
-
-		fmt.Printf("Enter the Second: ")
-		choiceSecond := WaitInputIntFromCLI()
-
-		fmt.Printf("Enter the your Note: ")
-		text := WaitInputStringFromCLI()
-
-		note := models.MovieNoteInfo{
-			Season:  uint8(choiceSeason),
-			Episode: uint8(choiceEpisode),
-			Hour:    uint8(choiceHour),
-			Minute:  uint8(choiceMinute),
-			Second:  uint8(choiceSecond),
-			Text:    text,
-		}
-
+		note := handleOperationMovieNoteInfo(*movie)
 		err = a.Store.Movies.CreateNI(noContext, movie, &note)
-
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(2)
 		}
-
 		os.Exit(0)
-
 	} else if choiceOperation == 2 {
+		note := handleOperationMovieNoteInfo(*movie)
+		err = a.Store.Movies.UpdateNI(noContext, movie, &note)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(2)
+		}
+		os.Exit(0)
+	} else if choiceOperation == 3 {
 		DefaultPrinter = services.NewNotePrinter(*request)
 
 		StartSpinner(4, 100)
@@ -298,6 +357,42 @@ func (a *App) HandleNoteRequest(c *cli.Context) {
 
 		os.Exit(2)
 	}
+}
+
+func handleOperationMovieNoteInfo(movie models.MovieInfo) models.MovieNoteInfo {
+	choiceSeason := 0
+	choiceEpisode := 0
+
+	if movie.IsTVSeries {
+		fmt.Printf("Enter Season: ")
+		choiceSeason = WaitInputIntFromCLI()
+
+		fmt.Printf("Enter Episode: ")
+		choiceEpisode = WaitInputIntFromCLI()
+	}
+
+	fmt.Printf("Enter the Hour: ")
+	choiceHour := WaitInputIntFromCLI()
+
+	fmt.Printf("Enter the Minute: ")
+	choiceMinute := WaitInputIntFromCLI()
+
+	fmt.Printf("Enter the Second: ")
+	choiceSecond := WaitInputIntFromCLI()
+
+	fmt.Printf("Enter the your Note: ")
+	text := WaitInputStringFromCLI()
+
+	note := models.MovieNoteInfo{
+		Season:  uint8(choiceSeason),
+		Episode: uint8(choiceEpisode),
+		Hour:    uint8(choiceHour),
+		Minute:  uint8(choiceMinute),
+		Second:  uint8(choiceSecond),
+		Text:    text,
+	}
+
+	return note
 }
 
 func (a *App) HandleHistoryRequest(c *cli.Context) {
@@ -428,16 +523,68 @@ func (a *App) HandleMyListRequest(c *cli.Context) {
 }
 
 func (a *App) HandleLearnRequest(c *cli.Context) {
-	learnRequest := new(models.LearnRequest)
-	learnRequest.Filename = strings.Join(c.Args(), " ")
+	request := new(models.LearnRequest)
+	request.Filename = strings.Join(c.Args(), " ")
 
-	learn, err := learner.Learn(learnRequest)
+	DefaultPrinter = services.NewLearnPrinter(UseNoResultFilter(), *request)
+
+	DefaultPrinter.PrintBanner()
+
+	DefaultPrinter.PrintPhaseStart(1, "Checking file format...")
+
+	provider, err := learner.CheckFileFormat(*request)
 
 	if err != nil {
+		DefaultPrinter.PrintPhaseFail(1, err.Error())
 		os.Exit(1)
+	} else {
+		DefaultPrinter.PrintPhaseDone(1)
 	}
 
-	fmt.Println(learn.Success)
+	fmt.Printf("---> %s detected!\n", provider)
+
+	DefaultPrinter.PrintPhaseStart(2, "Scanning movies...")
+
+	learns, err := learner.ScanMovies(*request)
+
+	if err != nil {
+		DefaultPrinter.PrintPhaseFail(2, err.Error())
+		os.Exit(1)
+	} else {
+		DefaultPrinter.PrintPhaseDone(2)
+	}
+
+	DefaultPrinter.PrintPhaseStart(3, "Learning movies...")
+
+	DefaultPrinter.PrintPhaseDone(3)
+
+	fmt.Println()
+
+	//Map for Title (Liked or Not)
+	likes := make(map[string]bool)
+
+	for _, learn := range learns {
+		question := fmt.Sprintf("Did you like the %s movie?", learn.Result.Title)
+		likedMovie := AskYNQuestion(question, 3, true, false)
+
+		likes[learn.Result.Title] = likedMovie
+	}
+
+	DefaultPrinter.PrintPhaseStart(3, "Implementing movies to database...")
+
+	StartSpinner(4, 100)
+
+	for key, value := range likes {
+		movie := models.MovieInfo{
+			Title: key,
+		}
+		a.AddToMovieLikeDB(movie, value)
+		a.AddToWatchLaterDB(movie, true)
+	}
+
+	StopSpinner()
+
+	DefaultPrinter.PrintPhaseDone(3)
 }
 
 func (a *App) HandleTorrentRequest(c *cli.Context, movie *models.MovieInfo) {
@@ -631,17 +778,17 @@ func (a *App) HandleSearchTitleRequest(c *cli.Context) {
 			if c.Bool("all") {
 				//FIXME: Default engine IMDB, make array? for all results?
 				if (choice - 1) >= 10 {
-					movie = engine.GetMovie("RottenTomatoes", responses[1].Searches[choice-1-10])
+					movie = engine.GetMovie("RottenTomatoes", responses[1].Searches[choice-1-10], false)
 				} else if (choice - 1) >= 0 {
-					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])
+					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1], false)
 				}
 			} else {
 				if c.Bool("imdb") {
-					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])
+					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1], false)
 				} else if c.Bool("rottentomatoes") {
-					movie = engine.GetMovie("RottenTomatoes", responses[0].Searches[choice-1])
+					movie = engine.GetMovie("RottenTomatoes", responses[0].Searches[choice-1], false)
 				} else {
-					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1])
+					movie = engine.GetMovie("IMDB", responses[0].Searches[choice-1], false)
 				}
 			}
 
@@ -663,10 +810,7 @@ func (a *App) HandleSearchTitleRequest(c *cli.Context) {
 			//Print the movie info that we had get above
 			DefaultPrinter.PrintMovie(*movie)
 
-			err := a.AddToSearchHistoryDB(movie.Info, "Search")
-			if err != nil {
-				fmt.Println(err)
-			}
+			a.AddToSearchHistoryDB(movie.Info, "Search")
 
 			var watched = false
 			if len(movie.Info.URLTrailerIMDB) > 0 {
@@ -781,7 +925,7 @@ func (a *App) PostTrailerOperations(info models.MovieInfo, watched bool) {
 		watchlater := AskYNQuestion("Do you want to add this movie to Watch Later list?", 3, true, false)
 
 		if watchlater {
-			err := a.AddToWatchLaterDB(info)
+			err := a.AddToWatchLaterDB(info, false)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -795,20 +939,30 @@ func (a *App) PostTrailerOperations(info models.MovieInfo, watched bool) {
 
 var noContext = context.TODO()
 
-func (a *App) AddToWatchLaterDB(info models.MovieInfo) error {
+func (a *App) AddToWatchLaterDB(info models.MovieInfo, watched bool) error {
 	exist, err := a.Store.Movies.FindByTitle(noContext, info.Title)
-	if exist.ID != 0 {
-		err := a.Store.Movies.CreateWL(noContext, exist)
-		if err != nil {
-			return err
+	if exist.ID > 0 {
+		existWL, _ := a.Store.Movies.FindWL(noContext, exist.ID)
+		if existWL.ID > 0 {
+			err := a.Store.Movies.UpdateWL(noContext, &info, true)
+			if err != nil {
+				return err
+			}
+		} else if existWL.ID == 0 {
+			err := a.Store.Movies.CreateWL(noContext, exist, watched)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return err
 }
 
 func (a *App) AddToSearchHistoryDB(info models.MovieInfo, from string) error {
+	now := time.Now().Unix()
 	exist, err := a.Store.Movies.FindByTitle(noContext, info.Title)
 	if exist.ID == 0 {
+		info.Created = now
 		err := a.Store.Movies.Create(noContext, &info)
 		if err != nil {
 			return err
@@ -821,8 +975,9 @@ func (a *App) AddToSearchHistoryDB(info models.MovieInfo, from string) error {
 		if err != nil {
 			return err
 		}
-	} else {
+	} else if exist.ID > 0 {
 		info.ID = exist.ID
+		info.Updated = now
 		err := a.Store.Movies.Update(noContext, &info)
 		if err != nil {
 			return err
@@ -836,9 +991,25 @@ func (a *App) AddToSearchHistoryDB(info models.MovieInfo, from string) error {
 }
 
 func (a *App) AddToMovieLikeDB(info models.MovieInfo, liked bool) error {
+	now := time.Now().Unix()
 	exist, err := a.Store.Movies.FindByTitle(noContext, info.Title)
-	if exist.ID != 0 {
-		err := a.Store.Movies.CreateML(noContext, exist, liked)
+	if exist.ID == 0 {
+		info.Created = now
+		err := a.Store.Movies.Create(noContext, &info)
+		if err != nil {
+			return err
+		}
+		existNew, err := a.Store.Movies.FindByTitle(noContext, info.Title)
+		if err != nil {
+			return err
+		}
+		err = a.Store.Movies.CreateML(noContext, existNew, liked)
+		if err != nil {
+			return err
+		}
+	} else if exist.ID > 0 {
+		info.ID = exist.ID
+		err := a.Store.Movies.UpdateML(noContext, &info, liked)
 		if err != nil {
 			return err
 		}

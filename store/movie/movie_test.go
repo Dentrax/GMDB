@@ -68,6 +68,21 @@ func TestMovie(t *testing.T) {
 
 				So(err, ShouldBeNil)
 				So(SampleMovie.ID, ShouldEqual, 1)
+
+				Convey("Create a movie model that already exist", func() {
+					err := store.Create(noContext, SampleMovie)
+
+					So(err, ShouldNotBeNil)
+				})
+
+				Convey("Get all movies in the database", func() {
+					movies, err := store.GetMovies(noContext)
+
+					So(err, ShouldBeNil)
+					So(movies, ShouldNotBeNil)
+					So(len(movies), ShouldEqual, int64(1))
+				})
+
 				Convey("Count movie model in the database", func() {
 					count, err := store.Count(noContext)
 
@@ -185,7 +200,7 @@ func TestMovie(t *testing.T) {
 			})
 
 			Convey("Create a Watch Later model in the database", func() {
-				err := store.CreateWL(noContext, SampleMovie)
+				err := store.CreateWL(noContext, SampleMovie, false)
 
 				So(err, ShouldBeNil)
 
@@ -221,9 +236,14 @@ func TestMovie(t *testing.T) {
 
 					So(err, ShouldBeNil)
 
-					err = store.UpdateWL(noContext, SampleMovie, false)
+					updated, err := store.FindWL(noContext, SampleMovie.ID)
 
 					So(err, ShouldBeNil)
+					So(updated, ShouldNotBeNil)
+
+					Convey("Test the updated Watch Later model", func() {
+						So(updated.Watched, ShouldEqual, true)
+					})
 				})
 			})
 

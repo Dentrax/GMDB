@@ -62,7 +62,7 @@ func (s *Searcher) GetSearchResponses() []models.SearchResponse {
 	return responses
 }
 
-func (p *Searcher) GetMovie(engine string, response models.SearchResult) *models.Movie {
+func (p *Searcher) GetMovie(engine string, response models.SearchResult, onlyHome bool) *models.Movie {
 	//	r, _ := regexp.Compile("^(?i)(https?)://(www.imdb.com/title/)(tt(\\d)).*$")
 	//	if r.MatchString(strings.TrimSpace(p.Request.URL)) && !strings.HasSuffix(p.Request.URL, "/") {
 
@@ -76,7 +76,7 @@ func (p *Searcher) GetMovie(engine string, response models.SearchResult) *models
 			URL:   url,
 		}
 		client := imdb.New("IMDB", request)
-		movieInfo, err := client.GetMovie()
+		movieInfo, err := client.GetMovie(onlyHome)
 		if err != nil {
 			log.Fatalln("nil")
 		}

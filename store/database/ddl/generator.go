@@ -128,11 +128,14 @@ CREATE TABLE IF NOT EXISTS movies (
 ,movie_rtmeter TEXT
 ,movie_url_trailer_imdb TEXT
 ,movie_url_poster_imdb TEXT
+,movie_created INTEGER
+,movie_updated INTEGER
+,UNIQUE(movie_title)
 );
 `
 
 var createTableMovieWatchLater = `
-CREATE TABLE IF NOT EXISTS movie_watchlaters (
+CREATE TABLE IF NOT EXISTS movie_watchlist (
  wl_id          INTEGER PRIMARY KEY AUTOINCREMENT
 ,wl_movie_id    INTEGER
 ,wl_created     INTEGER

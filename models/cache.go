@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// CacheData stores a cache info for a service
 type CacheData struct {
 	Service string
 	Title   string

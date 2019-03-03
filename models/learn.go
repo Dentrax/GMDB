@@ -14,4 +14,11 @@ type LearnRequest struct {
 type LearnResponse struct {
 	Success bool
 	Error   string
+	Result  LearnResult
+}
+
+type LearnResult struct {
+	Title      string
+	IsTVSeries bool
+	WatchDate  string
 }

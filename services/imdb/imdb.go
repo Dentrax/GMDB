@@ -48,7 +48,7 @@ func (s *IMDB) SearchMovie(request *models.SearchRequest) *models.SearchResponse
 	return result
 }
 
-func (s *IMDB) GetMovie() (*models.Movie, error) {
+func (s *IMDB) GetMovie(onlyHome bool) (*models.Movie, error) {
 	if cache.IsFileExist(s.Name, "movies", s.Request.ID) {
 		result, err := cache.GetMovie(s.Name, "movies", s.Request.ID)
 		if err != nil {
@@ -68,21 +68,27 @@ func (s *IMDB) GetMovie() (*models.Movie, error) {
 
 	mi, err := GetMovieInfo(services.GetDocumentFromURL(s.Request.URL))
 
-	tl, err := GetTagline(services.GetDocumentFromURL(urlTL))
-	ps, err := GetPlotSummary(services.GetDocumentFromURL(urlPS))
-	pk, err := GetPlotKeywords(services.GetDocumentFromURL(urlPK))
-	pg, err := GetParentsGuide(services.GetDocumentFromURL(urlPG))
-
 	if err != nil {
 		log.Fatalln("nil")
 	}
 
 	movie.Info = *mi
 
-	movie.TL = *tl
-	movie.PS = *ps
-	movie.PK = *pk
-	movie.PG = *pg
+	if !onlyHome {
+		tl, err := GetTagline(services.GetDocumentFromURL(urlTL))
+		ps, err := GetPlotSummary(services.GetDocumentFromURL(urlPS))
+		pk, err := GetPlotKeywords(services.GetDocumentFromURL(urlPK))
+		pg, err := GetParentsGuide(services.GetDocumentFromURL(urlPG))
+
+		if err != nil {
+			log.Fatalln("nil")
+		}
+
+		movie.TL = *tl
+		movie.PS = *ps
+		movie.PK = *pk
+		movie.PG = *pg
+	}
 
 	return movie, nil
 }

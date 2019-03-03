@@ -31,6 +31,8 @@ func toParams(m *models.MovieInfo) map[string]interface{} {
 		"movie_rtmeter":             m.RTMeter,
 		"movie_url_trailer_imdb":    m.URLTrailerIMDB,
 		"movie_url_poster_imdb":     m.URLPosterIMDB,
+		"movie_created":             m.Created,
+		"movie_updated":             m.Updated,
 	}
 }
 
@@ -101,6 +103,8 @@ func scanRow(scanner database.Scanner, dest *models.MovieInfo) error {
 		&dest.RTMeter,
 		&dest.URLTrailerIMDB,
 		&dest.URLPosterIMDB,
+		&dest.Created,
+		&dest.Updated,
 	)
 }
 

@@ -103,14 +103,14 @@ func (s *movieStore) CreateML(ctx context.Context, movie *models.MovieInfo, like
 	})
 }
 
-func (s *movieStore) CreateWL(ctx context.Context, movie *models.MovieInfo) error {
+func (s *movieStore) CreateWL(ctx context.Context, movie *models.MovieInfo, watched bool) error {
 	return s.db.Lock(func(execer database.Execer, binder database.Binder) error {
 		now := time.Now().Unix()
 		params := map[string]interface{}{
 			"wl_movie_id": movie.ID,
 			"wl_created":  now,
 			"wl_updated":  now,
-			"wl_watched":  0,
+			"wl_watched":  watched,
 		}
 		query, args, err := binder.BindNamed(queryInsertWL, params)
 		if err != nil {
@@ -123,6 +123,19 @@ func (s *movieStore) CreateWL(ctx context.Context, movie *models.MovieInfo) erro
 		movie.ID, err = res.LastInsertId()
 		return err
 	})
+}
+
+func (s *movieStore) GetMovies(ctx context.Context) ([]*models.MovieInfo, error) {
+	out := []*models.MovieInfo{}
+	err := s.db.View(func(queryer database.Queryer, binder database.Binder) error {
+		rows, err := queryer.Query(queryMoviesAll)
+		if err != nil {
+			return err
+		}
+		out, err = scanRows(rows)
+		return err
+	})
+	return out, err
 }
 
 func (s *movieStore) GetSearches(ctx context.Context) ([]*models.MovieSearchInfo, error) {
@@ -380,7 +393,7 @@ FROM movie_notes
 
 const queryCountWL = `
 SELECT COUNT(*)
-FROM movie_watchlaters
+FROM movie_watchlist
 `
 
 const queryCountML = `
@@ -407,6 +420,8 @@ INSERT INTO movies (
 ,movie_rtmeter
 ,movie_url_trailer_imdb
 ,movie_url_poster_imdb
+,movie_created
+,movie_updated
 ) VALUES (
  :movie_title
 ,:movie_year
@@ -425,6 +440,8 @@ INSERT INTO movies (
 ,:movie_rtmeter
 ,:movie_url_trailer_imdb
 ,:movie_url_poster_imdb
+,:movie_created
+,:movie_updated
 )
 `
 
@@ -456,6 +473,8 @@ SELECT
 ,movie_rtmeter
 ,movie_url_trailer_imdb
 ,movie_url_poster_imdb
+,movie_created
+,movie_updated
 `
 
 const queryMovieNoteBase = `
@@ -512,8 +531,12 @@ WHERE ml_movie_id = :ml_movie_id
 `
 
 const queryMovieWLKey = queryMovieWLBase + `
-FROM movie_watchlaters
+FROM movie_watchlist
 WHERE wl_movie_id = :wl_movie_id
+`
+
+const queryMoviesAll = queryMovieBase + `
+FROM movies
 `
 
 const queryMovieSearchesAll = queryMovieSearchesBase + `
@@ -525,7 +548,7 @@ FROM movie_notes
 `
 
 const queryMovieWatchLaterAll = queryMovieWLBase + `
-FROM movie_watchlaters
+FROM movie_watchlist
 `
 
 const queryMovieLearnAll = queryMovieMLBase + `
@@ -559,6 +582,8 @@ SET
 ,movie_rtmeter             = :movie_rtmeter
 ,movie_url_trailer_imdb    = :movie_url_trailer_imdb
 ,movie_url_poster_imdb     = :movie_url_poster_imdb
+,movie_created             = :movie_created
+,movie_updated             = :movie_updated
 WHERE movie_id = :movie_id
 `
 
@@ -576,7 +601,7 @@ WHERE note_movie_id = :note_movie_id
 `
 
 const queryUpdateWL = `
-UPDATE movie_watchlaters
+UPDATE movie_watchlist
 SET
  wl_updated = :wl_updated
 ,wl_watched = :wl_watched
@@ -637,7 +662,7 @@ INSERT INTO movie_notes (
 
 //Watch Later
 const queryInsertWL = `
-INSERT INTO movie_watchlaters (
+INSERT INTO movie_watchlist (
  wl_movie_id
 ,wl_created
 ,wl_updated

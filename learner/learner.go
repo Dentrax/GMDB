@@ -9,101 +9,112 @@ package learner
 
 import (
 	"bufio"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 	"regexp"
 	"strings"
 
 	"gmdb/models"
+	"gmdb/pkg/utils"
 )
 
 var providers = []struct {
-	Provider   string
-	FirstLine  string
-	LastLine   string
-	RegexGroup string
-	RegexMovie string
+	Provider       string
+	FirstLine      string
+	LastLine       string
+	RegexGroup     string
+	RegexMovieName string
+	RegexMovieDate string
 }{
-	{"Netflix", "Title,Date", "", "(\".*?\",\"\\d+\\/\\d+\\/\\d+\")", "s"},
+	{"Netflix", "Title,Date", "", "(\".*?\",\"\\d+\\/\\d+\\/\\d+\")", "([^\"][a-zA-Z0-9_ ]+[^\\:\"])", "s"},
 }
 
-//"The 100: Season 1: Pilot","12/10/18"
-var netflixPrefix = "Title,Date"
 var netflixRegex = regexp.MustCompile("(\".*?\",\"\\d+\\/\\d+\\/\\d+\")")
-var netflixNameRegex = regexp.MustCompile("(\".*?\",\"\\d+\\/\\d+\\/\\d+\")")
 
-func Learn(request *models.LearnRequest) (*models.LearnResponse, error) {
-	result := new(models.LearnResponse)
+func CheckFileFormat(request models.LearnRequest) (string, error) {
+	file, err := os.OpenFile(request.Filename, os.O_RDONLY, os.ModePerm)
 
-	startPhase(1, "Checking file format...")
-
-	f, err := os.OpenFile(request.Filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		result.Success = false
-		return result, err
+		return "", err
 	}
-	defer f.Close()
 
-	rd := bufio.NewReader(f)
+	defer file.Close()
+
+	rd := bufio.NewReader(file)
 
 	filePrefix, _, err := rd.ReadLine()
-	filePrefix2, _, err := rd.ReadLine()
 
-	fmt.Println(string(filePrefix))
-	fmt.Println(string(filePrefix2))
-
-	if strings.Compare(string(filePrefix), netflixPrefix) == 0 {
-		for {
-			line, err := rd.ReadString('\n')
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				return nil, err
-			}
-
-			match := netflixRegex.MatchString(line)
-
-			if match {
-				name := netflixNameRegex.FindString(line)
-				fmt.Println(name)
-			}
-
-			fmt.Println(match)
+	for _, provider := range providers {
+		if strings.Compare(string(filePrefix), provider.FirstLine) == 0 {
+			return provider.Provider, nil
 		}
-
-		donePhase(1)
-		fmt.Println()
-		fmt.Println("--> Netflix detected!")
 	}
 
-	startPhase(2, "Dedecting dictionary type...")
-
-	donePhase(2)
-
-	startPhase(3, "Learning dictionary...")
-
-	failPhase(3, "Learn faild")
-
-	result.Success = true
-
-	return result, nil
+	return "", nil
 }
 
-func startPhase(phase int, description string) {
-	fmt.Printf("\nPHASE[%d/3]: %s", phase, description)
-}
+func ScanMovies(request models.LearnRequest) ([]models.LearnResponse, error) {
+	responses := new([]models.LearnResponse)
 
-func donePhase(phase int) {
-	fmt.Printf("[DONE]")
-}
+	file, err := os.OpenFile(request.Filename, os.O_RDONLY, os.ModePerm)
 
-func failPhase(phase int, description string) {
-	fmt.Printf("[FAIL]")
-	fmt.Println(description)
-}
+	if err != nil {
+		return nil, err
+	}
 
-func matchNetflix(line string) bool {
-	return netflixRegex.MatchString(line)
+	defer file.Close()
+
+	rd := bufio.NewReader(file)
+
+	filePrefix, _, err := rd.ReadLine()
+
+	for _, provider := range providers {
+		if strings.Compare(string(filePrefix), provider.FirstLine) == 0 {
+			//filePrefix, _, err := rd.ReadLine()
+
+			var rgxGroup = regexp.MustCompile(provider.RegexGroup)
+			var rgxMovieName = regexp.MustCompile(provider.RegexMovieName)
+			//TODO: Implement this
+			//var rgxMovieDate = regexp.MustCompile(provider.RegexMovieDate)
+
+			//For remove duplicate Titles and TV Series
+			askedTitles := []string{}
+
+			for {
+				line, err := rd.ReadString('\n')
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+					return nil, err
+				}
+				match := rgxGroup.MatchString(line)
+				var result models.LearnResult
+				if match {
+					name := rgxMovieName.FindString(line)
+					result = models.LearnResult{
+						Title:      name,
+						IsTVSeries: false,
+						WatchDate:  "NONE",
+					}
+				}
+				response := models.LearnResponse{
+					Success: match,
+					Error:   "",
+					Result:  result,
+				}
+
+				//TODO: title de : olabilie journer 2: jungle gibi
+
+				if !utils.IsContains(askedTitles, result.Title) {
+					askedTitles = append(askedTitles, result.Title)
+					*responses = append(*responses, response)
+				}
+			}
+
+			return *responses, nil
+		}
+	}
+	return nil, errors.New("Null result")
 }

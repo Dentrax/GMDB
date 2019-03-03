@@ -366,6 +366,27 @@ func main() {
 				return err
 			},
 		},
+		cli.Command{
+			Name:        "update",
+			Usage:       "updt",
+			UsageText:   "updt text",
+			Description: "desc",
+			ArgsUsage:   "[arg]",
+			Action: func(c *cli.Context) error {
+				config, err := config.LoadConfig()
+				if err != nil {
+					return cli.NewExitError("Failed to load config", 1)
+				}
+				gmdb := &gmdb.App{}
+				gmdb.Initialize(config)
+				gmdb.HandleUpdateRequest(c)
+				return nil
+			},
+			OnUsageError: func(c *cli.Context, err error, isSubcommand bool) error {
+				fmt.Fprintf(c.App.Writer, "Wrong usage: %q \n", err)
+				return err
+			},
+		},
 	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{

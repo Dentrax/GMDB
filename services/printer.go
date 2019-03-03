@@ -25,6 +25,8 @@ type Printer struct {
 	RequestHistory models.HistoryRequest
 	RequestMyList  models.MyListRequest
 	RequestNote    models.NoteRequest
+	RequestLearn   models.LearnRequest
+	RequestUpdate  models.UpdateRequest
 }
 
 func NewPrinter(filter models.ResultFilter, request models.SearchRequest) *Printer {
@@ -66,6 +68,20 @@ func NewMyListPrinter(filter models.ResultFilter, request models.MyListRequest) 
 	return &Printer{
 		Filter:        filter,
 		RequestMyList: request,
+	}
+}
+
+func NewLearnPrinter(filter models.ResultFilter, request models.LearnRequest) *Printer {
+	return &Printer{
+		Filter:       filter,
+		RequestLearn: request,
+	}
+}
+
+func NewUpdatePrinter(filter models.ResultFilter, request models.UpdateRequest) *Printer {
+	return &Printer{
+		Filter:        filter,
+		RequestUpdate: request,
 	}
 }
 
@@ -164,6 +180,22 @@ func (p *Printer) PrintTorrentResponses(min, max uint8, isMore bool, responses [
 			}
 		}
 	}
+}
+
+func (p *Printer) PrintUpdateMovieSuccess(title string) {
+	styleGreen := chalk.Green.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	fmt.Printf("Movie updated in DB: %s%s%s\n", styleGreen, title, chalk.Reset)
+}
+
+func (p *Printer) PrintUpdateMovieFailed(title, title2 string) {
+	styleRed := chalk.Red.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	fmt.Printf("Movie not found in DB: %s%s [%s]%s\n", styleRed, title, title2, chalk.Reset)
 }
 
 func (p *Printer) PrintNoteResponses(responses []models.NoteResponse) {
@@ -309,6 +341,36 @@ func (p *Printer) PrintMovie(movie models.Movie) {
 	} else {
 		fmt.Println()
 	}
+}
+
+func (p *Printer) PrintPhaseStart(phase int, description string) {
+	styleBlue := chalk.Blue.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	styleWhite := chalk.White.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	fmt.Printf("\n%sPHASE[%d/3]: %s", styleBlue, phase, chalk.Reset)
+	fmt.Printf("%s%s%s", styleWhite, description, chalk.Reset)
+}
+
+func (p *Printer) PrintPhaseDone(phase int) {
+	styleGreen := chalk.Green.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	fmt.Printf("%s%s%s\n", styleGreen, "[DONE]", chalk.Reset)
+}
+
+func (p *Printer) PrintPhaseFail(phase int, description string) {
+	styleRed := chalk.Red.NewStyle().
+		WithBackground(chalk.ResetColor).
+		WithTextStyle(chalk.Bold)
+
+	fmt.Printf("%s%s%s\n", styleRed, "[FAIL]", chalk.Reset)
+	fmt.Printf("---> %s!\n", description)
 }
 
 func (p *Printer) printTorrentInfo(result models.SearchTorrentResult, info parsetorrentname.TorrentInfo) {
