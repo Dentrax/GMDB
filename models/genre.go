@@ -7,6 +7,7 @@
 
 package models
 
+// GenreMap represents a genre map for common transmission between movie services.
 var GenreMap = map[string]int{
 	"ACTION":      1,
 	"ADVENTURE":   2,

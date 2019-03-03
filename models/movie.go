@@ -46,11 +46,55 @@ type Movie struct {
 	PG   ParentsGuide
 }
 
+// Tagline stores a list of tag about the movie
+type Tagline struct {
+	Tags []string
+}
+
 // CreditInfo stores credit informations like (Directors, Writers, Stars)
 type CreditInfo struct {
 	Directors []string
 	Writers   []string
 	Stars     []string
+}
+
+// Summary stores the informations about the summary's Author and Text
+type Summary struct {
+	Author string
+	Text   string
+}
+
+// PlotSummary stores a list of Summary
+type PlotSummary struct {
+	Summaries []Summary
+	Total     uint
+}
+
+// PlotKeywords stores the Keywords about the movie
+type PlotKeywords struct {
+	Keywords []string
+	Total    uint
+}
+
+// ParentsGuide stores SeverityRate informations about the
+// Nudity, Violence, Profanity, Alcohol and Frightening
+type ParentsGuide struct {
+	TotalVote   uint
+	Nudity      SeverityRate
+	Violence    SeverityRate
+	Profanity   SeverityRate
+	Alcohol     SeverityRate
+	Frightening SeverityRate
+}
+
+// SeverityRate stores a list of integers for the ParentsGuide
+type SeverityRate struct {
+	NONE      uint
+	MILD      uint
+	MODERATE  uint
+	SEVERE    uint
+	TotalRate uint
+	FinalRate string
 }
 
 // MovieLearnInfo represents a database row from the table (movie_learns)

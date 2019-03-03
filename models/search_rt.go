@@ -7,6 +7,8 @@
 
 package models
 
+// RTSearchRequest represents a movie search request
+// that to be sent to RottenTomatoes service
 type RTSearchResult struct {
 	ActorCount     uint                `json:"actorCount"`
 	Actors         []RTActorInfo       `json:"actors"`
@@ -18,12 +20,15 @@ type RTSearchResult struct {
 	TVCount        uint                `json:"tvCount"`
 }
 
+// RTActorInfo represents an actor information
 type RTActorInfo struct {
 	Name  string `json:"name"`
 	URL   string `json:"url"`
 	Image string `json:"image"`
 }
 
+// RTSearchMovieInfo represents a movie info
+// that fetched from RottenTomatoes
 type RTSearchMovieInfo struct {
 	Name       string                  `json:"name"`
 	Year       uint                    `json:"year"`
@@ -35,11 +40,13 @@ type RTSearchMovieInfo struct {
 	Subline    string                  `json:"subline"`
 }
 
+// RTSearchMovieCastItem represents a Casting information
 type RTSearchMovieCastItem struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
+// RTTVSeriesInfo represents a TV Series information
 type RTTVSeriesInfo struct {
 	Title      string `json:"title"`
 	StartYear  uint   `json:"startYear"`
