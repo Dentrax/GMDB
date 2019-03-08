@@ -15,6 +15,8 @@ go:
   - 1.9.x
   - 1.10.x
   - 1.11.x
+  - master
+  - release
 
 before_install:
   - echo "before_install start"
@@ -36,6 +38,7 @@ before_install:
   - go get -u -v github.com/ttacon/chalk
   - go get -u -v github.com/middelink/go-parse-torrent-name
   - go get -u -v github.com/jmoiron/sqlx
+  - go get -u -v github.com/urfave/cli
 
 install:
   - echo "install start"
