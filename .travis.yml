@@ -47,6 +47,8 @@ install:
 
 before_script:
   - echo "before_script start"
+  - go vet ./...
+  - echo "before_script end"
 
 script:
   - go build -a -v .
