@@ -10,9 +10,6 @@ addons:
   apt:
     update: true
 
-ignore:
-  - *.md
-
 go:
   - 1.8.x
   - 1.9.x
