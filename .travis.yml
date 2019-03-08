@@ -30,7 +30,7 @@ before_install:
   - go get -u -v golang.org/x/tools/cmd/cover
   - go get -u -v github.com/mattn/go-sqlite3
   - go get -u -v github.com/go-ini/ini
-  - go get -u -v github.com/smartystreets/goconvey)
+  - go get -u -v github.com/smartystreets/goconvey
   - go get -u -v github.com/PuerkitoBio/goquery
   - go get -u -v github.com/briandowns/spinner
   - go get -u -v github.com/ttacon/chalk
