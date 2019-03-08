@@ -12,10 +12,10 @@ import (
 	"os"
 	"time"
 
-	"gmdb/models"
-	"gmdb/pkg"
-	"gmdb/pkg/config"
-	"gmdb/services"
+	"github.com/Dentrax/GMDB/models"
+	"github.com/Dentrax/GMDB/pkg"
+	"github.com/Dentrax/GMDB/pkg/config"
+	"github.com/Dentrax/GMDB/services"
 
 	"github.com/urfave/cli"
 )
