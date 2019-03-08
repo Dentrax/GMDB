@@ -25,7 +25,7 @@ var DefaultPrinter *services.Printer
 func main() {
 	app := cli.NewApp()
 	app.Name = "GMDB"
-	app.Version = "0.0.0"
+	app.Version = "Alpha v0.0.0"
 	app.Compiled = time.Now()
 	app.Author = "Furkan Türkal"
 	app.Copyright = "(c) 2019 - Dentrax"

@@ -32,6 +32,7 @@ var providers = []struct {
 
 var netflixRegex = regexp.MustCompile("(\".*?\",\"\\d+\\/\\d+\\/\\d+\")")
 
+// CheckFileFormat returns a string and checks the given file format.
 func CheckFileFormat(request models.LearnRequest) (string, error) {
 	file, err := os.OpenFile(request.Filename, os.O_RDONLY, os.ModePerm)
 
@@ -54,6 +55,9 @@ func CheckFileFormat(request models.LearnRequest) (string, error) {
 	return "", nil
 }
 
+// ScanMovies scans given LearnRequest and returns LearnResponse.
+// Scans the providers array item by item and find the correct regex pattern,
+// then use it to parse the movie informations.
 func ScanMovies(request models.LearnRequest) ([]models.LearnResponse, error) {
 	responses := new([]models.LearnResponse)
 

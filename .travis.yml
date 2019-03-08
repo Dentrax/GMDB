@@ -1,0 +1,65 @@
+sudo: false
+
+language: go
+
+os:
+  - linux
+  - osx
+
+addons:
+  apt:
+    update: true
+
+ignore:
+  - *.md
+
+go:
+  - 1.8.x
+  - 1.9.x
+  - 1.10.x
+  - 1.11.x
+  - master
+
+before_install:
+  - echo "before_install start"
+  - df -h
+  - pwd
+  - uname -a
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update
+    fi
+  - go version
+  - go get -u -v github.com/smartystreets/goconvey
+  - go get -u -v golang.org/x/tools/cmd/cover
+  - go get -u -v github.com/mattn/go-sqlite3
+  - go get -u -v github.com/go-ini/ini
+  - go get -u -v github.com/smartystreets/goconvey)
+  - go get -u -v github.com/PuerkitoBio/goquery
+  - go get -u -v github.com/briandowns/spinner
+  - go get -u -v github.com/ttacon/chalk
+  - go get -u -v github.com/middelink/go-parse-torrent-name
+  - go get -u -v github.com/jmoiron/sqlx
+
+install:
+  - echo "install start"
+  - echo "install done"
+
+before_script:
+  - echo "before_script start"
+
+script:
+  - go build -a -v .
+  - go test -v -cover -race ./...
+
+after_script:
+  - echo "after_script start"
+  - echo "after_script done"
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
