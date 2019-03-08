@@ -181,7 +181,7 @@ The **[master branch](https://github.com/dentrax/GMDB/tree/master)** is extensiv
 
 The base project code is copyrighted by Furkan 'Dentrax' Türkal and is covered by single licence.
 
-All program code (i.e. .go) is licensed under GNU License unless otherwise specified. Please see the **[LICENSE.md](https://github.com/Dentrax/GMDB/blob/master/LICENSE)** file for more information.
+All program code (i.e. .go) is licensed under GNU GPLv3 License unless otherwise specified. Please see the **[LICENSE.md](https://github.com/Dentrax/GMDB/blob/master/LICENSE)** file for more information.
 
 | Package                                                                | Author                                            | License    |
 | :---------                                                             | :--------                                         | :--------  |
@@ -200,7 +200,7 @@ While this repository is being prepared, it may have been quoted from some sourc
 
 If there is an unspecified source or if you think that I made a copyright infringement, please contact with me.
 
-**Special Thanks***
+**Special Thanks**
 
 - [PuerkitoBio](https://github.com/PuerkitoBio) for creating the awesome [goquery](https://github.com/PuerkitoBio/goquery) library that made this project possible.
 

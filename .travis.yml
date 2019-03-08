@@ -56,7 +56,7 @@ before_script:
 
 script:
   - go build -a -v .
-  - go test -v -cover -race ./...
+  - go test -v -cover -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 after_script:
   - echo "after_script start"
