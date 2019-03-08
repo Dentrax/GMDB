@@ -1,6 +1,6 @@
 <h1 align="center">GMDB</h1>
 
-[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
 [![Build Status](https://travis-ci.org/Dentrax/GMDB.svg?branch=master)](https://travis-ci.org/Dentrax/GMDB)
 [![codecov](https://codecov.io/gh/Dentrax/GMDB/branch/master/graph/badge.svg)](https://codecov.io/gh/Dentrax/GMDB)
@@ -12,9 +12,11 @@
 
 [What It Is](#what-it-is)
 
+[Features](#features)
+
 [How To Use](#how-to-use)
 
-[Features](#features)
+[Installation](#installation)
 
 [Requirements](#requirements)
 
@@ -58,33 +60,6 @@ Note
 
 ![IMDB](https://raw.githubusercontent.com/Dentrax/GMDB/master/screenshots/note_sample.jpg)
 
-## How To Use
-
-1. Clone the project to your computer and navigate to folder by executing the following command:
-```
-$ git clone https://github.com/Dentrax/GMDB.git & cd ./GMDB/
-```
-
-* Run this command if you want to test project before build & install
-```
-$ go test -v -cover -race ./...
-```
-
-* Run this command to get required packages before build & install
-```
-$ go get -d ./...
-```
-
-2. Build the all project using this command
-```
-$ go build .
-```
-
-3. Install the GMDB with following command
-```
-$ go install .
-```
-
 ## Features
 
 * Search movies from IMDB and RottenTomatoes (without API key)
@@ -108,6 +83,75 @@ $ go install .
 * Store your datas in SQLite Database
 
 * Local Movie Database with SQLite
+
+## How To Use
+
+1. `help` command:
+```
+$ ./GMDB help
+```
+
+2. `search` command:
+```
+$ ./GMDB search movie to search
+```
+
+3. `learn` command:
+```
+$ ./GMDB learn ~/path/to/your/import/data.extension
+```
+
+4. `history` command:
+```
+$ ./GMDB history
+```
+
+5. `list` command:
+```
+$ ./GMDB list
+```
+
+6. `note` command:
+```
+$ ./GMDB note
+```
+
+7. `torrent` command:
+```
+$ ./GMDB torrent movie to search
+```
+
+8. `update` command:
+```
+$ ./GMDB update
+```
+
+## Installation
+
+1. Clone the project to your computer and navigate to folder by executing the following command:
+```
+$ git clone https://github.com/Dentrax/GMDB.git && cd ./GMDB/
+```
+
+* Run this command if you want to test project before build & install
+```
+$ go test -v -cover -race ./...
+```
+
+* Run this command to get required packages before build & install
+```
+$ go get -d ./...
+```
+
+2. Build the all project using this command
+```
+$ go build .
+```
+
+3. Install the GMDB with following command
+```
+$ go install .
+```
 
 ## Known Issues
 
