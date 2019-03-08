@@ -37,7 +37,7 @@ before_install:
   - go get -u -v github.com/mattn/go-sqlite3
   - go get -u -v github.com/go-ini/ini
   - go get -u -v github.com/smartystreets/goconvey
-  - go get -u -v github.com/PuerkitoBio/goquery
+  - go get -u -v github.com/puerkitobio/goquery
   - go get -u -v github.com/briandowns/spinner
   - go get -u -v github.com/ttacon/chalk
   - go get -u -v github.com/middelink/go-parse-torrent-name
