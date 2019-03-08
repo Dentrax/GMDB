@@ -15,8 +15,8 @@ import (
 	"regexp"
 	"strings"
 
-	"gmdb/models"
-	"gmdb/pkg/utils"
+	"github.com/Dentrax/GMDB/models"
+	"github.com/Dentrax/GMDB/pkg/utils"
 )
 
 var providers = []struct {

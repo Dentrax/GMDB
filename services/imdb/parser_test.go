@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"gmdb/models"
-	"gmdb/services/common"
+	"github.com/Dentrax/GMDB/models"
+	"github.com/Dentrax/GMDB/services/common"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

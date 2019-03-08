@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gmdb/models"
+	"github.com/Dentrax/GMDB/models"
 
 	"github.com/puerkitobio/goquery"
 )

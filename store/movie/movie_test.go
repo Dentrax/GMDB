@@ -11,8 +11,8 @@ import (
 	"context"
 	"testing"
 
-	"gmdb/models"
-	"gmdb/store/database/dbtest"
+	"github.com/Dentrax/GMDB/models"
+	"github.com/Dentrax/GMDB/store/database/dbtest"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

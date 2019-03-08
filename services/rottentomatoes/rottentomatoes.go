@@ -10,8 +10,8 @@ package rottentomatoes
 import (
 	"log"
 
-	"gmdb/models"
-	"gmdb/services/common"
+	"github.com/Dentrax/GMDB/models"
+	"github.com/Dentrax/GMDB/services/common"
 
 	"github.com/puerkitobio/goquery"
 )

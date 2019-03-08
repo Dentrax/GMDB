@@ -15,7 +15,7 @@ import (
 	"os"
 	"strings"
 
-	"gmdb/models"
+	"github.com/Dentrax/GMDB/models"
 )
 
 const pathRoot string = "./cache/gmdb"

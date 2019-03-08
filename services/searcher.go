@@ -10,9 +10,9 @@ package services
 import (
 	"log"
 
-	"gmdb/models"
-	"gmdb/services/imdb"
-	"gmdb/services/rottentomatoes"
+	"github.com/Dentrax/GMDB/models"
+	"github.com/Dentrax/GMDB/services/imdb"
+	"github.com/Dentrax/GMDB/services/rottentomatoes"
 )
 
 type Searcher struct {

@@ -8,7 +8,7 @@
 package store
 
 import (
-	"gmdb/models"
+	"github.com/Dentrax/GMDB/models"
 )
 
 // New returns a new Store service.

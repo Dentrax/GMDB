@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"gmdb/models"
-	"gmdb/services/common"
+	"github.com/Dentrax/GMDB/models"
+	"github.com/Dentrax/GMDB/services/common"
 )
 
 const PATH_TEST = "../../testdata/RT/"
