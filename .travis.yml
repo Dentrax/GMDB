@@ -11,12 +11,16 @@ addons:
     update: true
 
 go:
-  - 1.8.x
-  - 1.9.x
   - 1.10.x
   - 1.11.x
   - master
   - release
+  - tip
+
+matrix:
+  allow_failures:
+    - go: tip
+  fast_finish: true
 
 before_install:
   - echo "before_install start"
