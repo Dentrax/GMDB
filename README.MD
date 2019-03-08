@@ -2,6 +2,7 @@
 
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
+[![Build Status](https://travis-ci.org/Dentrax/GMDB.svg?branch=master)](https://travis-ci.org/Dentrax/GMDB)
 [![Sourcegraph](https://img.shields.io/badge/view%20on-Sourcegraph-brightgreen.svg)](https://sourcegraph.com/github.com/Dentrax/GMDB)
 
 **GMDB is the ultra-simple, open-source, cross-platform Movie Library with Features (Search, Take Note, Watch Later, Like, Import, Learn)**
