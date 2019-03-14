@@ -27,7 +27,7 @@ var providers = []struct {
 	RegexMovieName string
 	RegexMovieDate string
 }{
-	{"Netflix", "Title,Date", "", "(\".*?\",\"\\d+\\/\\d+\\/\\d+\")", "([^\"][a-zA-Z0-9_ ]+[^\\:\"])", "s"},
+	{"Netflix", "Title,Date", "", "(\".*?\",\"\\d+\\/\\d+\\/\\d+\")", "([^\"][a-zA-Z0-9_ ]+[^\\:\"])", "(((0)?[0-9])|((1)[0-2]))(\\/)([0-2]?[0-9]|(3)[0-1])(\\/)\\d{2}"},
 }
 
 var netflixRegex = regexp.MustCompile("(\".*?\",\"\\d+\\/\\d+\\/\\d+\")")
@@ -58,7 +58,7 @@ func CheckFileFormat(request models.LearnRequest) (string, error) {
 // ScanMovies scans given LearnRequest and returns LearnResponse.
 // Scans the providers array item by item and find the correct regex pattern,
 // then use it to parse the movie informations.
-func ScanMovies(request models.LearnRequest) ([]models.LearnResponse, error) {
+func ScanMovies(request models.LearnRequest, unique bool) ([]models.LearnResponse, error) {
 	responses := new([]models.LearnResponse)
 
 	file, err := os.OpenFile(request.Filename, os.O_RDONLY, os.ModePerm)
@@ -79,6 +79,7 @@ func ScanMovies(request models.LearnRequest) ([]models.LearnResponse, error) {
 
 			var rgxGroup = regexp.MustCompile(provider.RegexGroup)
 			var rgxMovieName = regexp.MustCompile(provider.RegexMovieName)
+			var rgxMovieDate = regexp.MustCompile(provider.RegexMovieDate)
 			//TODO: Implement this
 			//var rgxMovieDate = regexp.MustCompile(provider.RegexMovieDate)
 
@@ -97,10 +98,11 @@ func ScanMovies(request models.LearnRequest) ([]models.LearnResponse, error) {
 				var result models.LearnResult
 				if match {
 					name := rgxMovieName.FindString(line)
+					date := rgxMovieDate.FindString(line)
 					result = models.LearnResult{
 						Title:      name,
 						IsTVSeries: false,
-						WatchDate:  "NONE",
+						WatchDate:  date,
 					}
 				}
 				response := models.LearnResponse{
@@ -111,8 +113,12 @@ func ScanMovies(request models.LearnRequest) ([]models.LearnResponse, error) {
 
 				//TODO: title de : olabilie journer 2: jungle gibi
 
-				if !utils.IsContains(askedTitles, result.Title) {
-					askedTitles = append(askedTitles, result.Title)
+				if unique {
+					if !utils.IsContains(askedTitles, result.Title) {
+						askedTitles = append(askedTitles, result.Title)
+						*responses = append(*responses, response)
+					}
+				} else {
 					*responses = append(*responses, response)
 				}
 			}

@@ -545,7 +545,7 @@ func (a *App) HandleLearnRequest(c *cli.Context) {
 
 	DefaultPrinter.PrintPhaseStart(2, "Scanning movies...")
 
-	learns, err := learner.ScanMovies(*request)
+	learns, err := learner.ScanMovies(*request, true)
 
 	if err != nil {
 		DefaultPrinter.PrintPhaseFail(2, err.Error())
