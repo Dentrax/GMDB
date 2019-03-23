@@ -1,4 +1,5 @@
-<h1 align="center">GMDB</h1>
+# [GMDB](https://github.com/Dentrax/GMDB) &nbsp; [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Do%20you%20love%20watching%20movies?%20Then%20what%20are%20you%20waiting%20for?&url=https://github.com/Dentrax/GMDB&via=github&hashtags=GMDB,cli,search,watch,movies,netflix,developers)
+
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
