@@ -10,7 +10,7 @@
 
 **Warning:** Are you [binge watcher](https://en.wikipedia.org/wiki/Binge-watching)? Let the fun begin with: `SEARCH-WATCH-REPEAT`!
 
-[![demo](https://asciinema.org/a/113463.svg)](https://asciinema.org/a/113463?autoplay=1)
+[![demo](https://asciinema.org/a/tm0T7fssB8XCSal9ll3YdoVtw.svg)](https://asciinema.org/a/tm0T7fssB8XCSal9ll3YdoVtw?autoplay=1)
 
 [What It Is](#what-it-is)
 
