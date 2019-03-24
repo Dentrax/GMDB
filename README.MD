@@ -5,7 +5,7 @@
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
 [![Build Status](https://travis-ci.org/Dentrax/GMDB.svg?branch=master)](https://travis-ci.org/Dentrax/GMDB)
 [![codecov](https://codecov.io/gh/Dentrax/GMDB/branch/master/graph/badge.svg)](https://codecov.io/gh/Dentrax/GMDB)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FDentrax%2FGMDB.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2FDentrax%2FGMDB?ref=badge_small)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FDentrax%2FGMDB.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FDentrax%2FGMDB?ref=badge_shield)
 [![Sourcegraph](https://img.shields.io/badge/view%20on-Sourcegraph-brightgreen.svg)](https://sourcegraph.com/github.com/Dentrax/GMDB)
 
 **GMDB is the ultra-simple, open-source, cross-platform Movie Library with Features (Search, Take Note, Watch Later, Like, Import, Learn)**
