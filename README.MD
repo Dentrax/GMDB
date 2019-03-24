@@ -6,6 +6,7 @@
 [![Build Status](https://travis-ci.org/Dentrax/GMDB.svg?branch=master)](https://travis-ci.org/Dentrax/GMDB)
 [![codecov](https://codecov.io/gh/Dentrax/GMDB/branch/master/graph/badge.svg)](https://codecov.io/gh/Dentrax/GMDB)
 [![Sourcegraph](https://img.shields.io/badge/view%20on-Sourcegraph-brightgreen.svg)](https://sourcegraph.com/github.com/Dentrax/GMDB)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDentrax%2FGMDB.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FDentrax%2FGMDB?ref=badge_shield)
 
 **GMDB is the ultra-simple, open-source, cross-platform Movie Library with Features (Search, Take Note, Watch Later, Like, Import, Learn)**
 
@@ -250,6 +251,9 @@ If there is an unspecified source or if you think that I made a copyright infrin
 **Special Thanks**
 
 - [PuerkitoBio](https://github.com/PuerkitoBio) for creating the awesome [goquery](https://github.com/PuerkitoBio/goquery) library that made this project possible.
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDentrax%2FGMDB.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FDentrax%2FGMDB?ref=badge_large)
 
 ## Contributing
 
