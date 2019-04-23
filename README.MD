@@ -12,7 +12,7 @@
 
 **Warning:** Are you [binge watcher](https://en.wikipedia.org/wiki/Binge-watching)? Let the fun begin with: `SEARCH-WATCH-REPEAT`!
 
-[![demo](https://asciinema.org/a/tm0T7fssB8XCSal9ll3YdoVtw.svg)](https://asciinema.org/a/tm0T7fssB8XCSal9ll3YdoVtw?autoplay=1)
+[![asciicast](https://asciinema.org/a/242333.svg)](https://asciinema.org/a/242333)
 
 [What It Is](#what-it-is)
 
@@ -89,6 +89,8 @@ Note
 * Local Movie Database with SQLite
 
 ## How To Use
+
+**Play Cast:** `asciinema play screenshots/asciinema.cast` 
 
 1. `help` command:
 ```
