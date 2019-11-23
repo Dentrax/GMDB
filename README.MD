@@ -177,11 +177,13 @@ $ go install .
 
 - [ ] Add benchmark tests for service parsers
 
-- [ ] Add tests for Netflix data import
+- [X] Add tests for Netflix data import
 
-- [ ] Encrypt/Decrypt the database
+- [ ] Add Encrypt/Decrypt features to the database
 
-- [ ] Live tests for IMDB and RottenTomatoes
+- [ ] Add Live tests for IMDB and RottenTomatoes
+
+- [X] Add Live tests for 1337x torrent service
 
 - [ ] Sync database for some services (Evernote, Keep, etc.)
 
