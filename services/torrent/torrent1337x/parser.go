@@ -102,7 +102,7 @@ func ParseSearchTorrents(doc *goquery.Document) *models.SearchTorrentResponse {
 }
 
 func ParseMagnetString(doc *goquery.Document) (string, error) {
-	finder := doc.Find("body > main > div > div > div > div.box-info-detail.no-top-radius > div.torrent-category-detail.clearfix > ul.download-links-dontblock.btn-wrap-list > li:nth-child(1) > a")
+	finder := doc.Find("body > main > div > div > div > div:nth-child(2) > div > ul > li > a")
 	if len(finder.Nodes) > 0 {
 		text, exist := finder.Attr("href")
 		if exist {
