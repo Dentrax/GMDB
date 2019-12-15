@@ -524,7 +524,7 @@ func (a *App) HandleMyListRequest(c *cli.Context) {
 
 func (a *App) HandleLearnRequest(c *cli.Context) {
 	request := new(models.LearnRequest)
-	request.Filename = strings.Join(c.Args(), " ")
+	request.Filename = strings.Join(c.Args().Slice(), " ")
 
 	DefaultPrinter = services.NewLearnPrinter(UseNoResultFilter(), *request)
 
@@ -591,7 +591,7 @@ func (a *App) HandleTorrentRequest(c *cli.Context, movie *models.MovieInfo) {
 	request := new(models.SearchTorrentRequest)
 
 	if c != nil && movie == nil {
-		request.Title = strings.Join(c.Args(), "+")
+		request.Title = strings.Join(c.Args().Slice(), "+")
 
 		DefaultPrinter = services.NewTorrentPrinter(UseNoResultFilter(), *request)
 
@@ -692,7 +692,7 @@ func (a *App) HandleTorrentRequest(c *cli.Context, movie *models.MovieInfo) {
 //FIXME: Too long and hardcoded function, make it better
 func (a *App) HandleSearchTitleRequest(c *cli.Context) {
 	searchRequest := new(models.SearchRequest)
-	searchRequest.Title = strings.Join(c.Args(), "+")
+	searchRequest.Title = strings.Join(c.Args().Slice(), "+")
 
 	if c.Bool("all") {
 		searchRequest.ScanRT = true

@@ -23,98 +23,102 @@ import (
 var DefaultPrinter *services.Printer
 
 func main() {
-	app := cli.NewApp()
+	app := &cli.App{}
 	app.Name = "GMDB"
 	app.Version = "Alpha v0.0.0"
 	app.Compiled = time.Now()
-	app.Author = "Furkan Türkal"
+	app.Authors = []*cli.Author{
+		&cli.Author{
+			Name:  "Furkan Turkal",
+		},
+	}
 	app.Copyright = "(c) 2019 - Dentrax"
 	app.Usage = "gmdb"
 	app.ArgsUsage = "[args and such]"
 	app.HideHelp = false
 	app.HideVersion = false
-	app.Commands = []cli.Command{
-		cli.Command{
+	app.Commands = []*cli.Command{
+		{
 			Name:        "search",
 			Usage:       "usg",
 			UsageText:   "usg text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
 			Flags: []cli.Flag{
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "all, a",
 					Usage: "Search all supported sites (ignore others)",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "imdb, i",
 					Usage: "Search in IMDB",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "rottentomatoes, r",
 					Usage: "Search in RottenTomatoes",
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "url, u",
 					Usage: "Usage u",
 				},
 
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "search, s",
 					Usage: "Usage s",
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "filename, f",
 					Usage: "Usage f",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "title, ft",
 					Usage: "Filter the output by Title",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "year, fy",
 					Usage: "Filter the output by Year",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "released, fr",
 					Usage: "Filter the output by Released",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "duration, fz",
 					Usage: "Filter the output by Duration",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "summary, fk",
 					Usage: "Filter the output by Summary",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "directors, fd",
 					Usage: "Filter the output by Directors",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "writers, fw",
 					Usage: "Filter the output by Writers",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "stars, fp",
 					Usage: "Filter the output by Stars",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "genres, fg",
 					Usage: "Filter the output by Genres",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "tagline, fT",
 					Usage: "Filter the output by Tagline",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "summaries, fS",
 					Usage: "Filter the output by Summaries",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "keywords, fK",
 					Usage: "Filter the output by Keywords",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "parental, fP",
 					Usage: "Filter the output by Parental",
 				},
@@ -211,7 +215,7 @@ func main() {
 						filter.ParentsGuide = true
 					}
 				}
-				if len(c.Args()) > 0 {
+				if c.NArg() > 0 {
 					config, err := config.LoadConfig()
 					if err != nil {
 						return cli.NewExitError("Failed to load config", 1)
@@ -229,14 +233,14 @@ func main() {
 				return err
 			},
 		},
-		cli.Command{
+		{
 			Name:        "learn",
 			Usage:       "usg",
 			UsageText:   "usg text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
 			Action: func(c *cli.Context) error {
-				if len(c.Args()) > 0 {
+				if c.NArg() > 0 {
 					config, err := config.LoadConfig()
 					if err != nil {
 						return cli.NewExitError("Failed to load config", 1)
@@ -254,22 +258,22 @@ func main() {
 				return err
 			},
 		},
-		cli.Command{
+		{
 			Name:        "history",
 			Usage:       "hst",
 			UsageText:   "hst text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
 			Flags: []cli.Flag{
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "all, a",
 					Usage: "Get all histories both of search and watch",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "search, s",
 					Usage: "Get search histories",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "watch, w",
 					Usage: "Get watch histories",
 				},
@@ -289,22 +293,22 @@ func main() {
 				return err
 			},
 		},
-		cli.Command{
+		{
 			Name:        "list",
 			Usage:       "lst",
 			UsageText:   "lst text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
 			Flags: []cli.Flag{
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "all, a",
 					Usage: "Get all lists both of Watch Later(s) and Like(s)",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "watch, w",
 					Usage: "Get Watch Later list",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "like, l",
 					Usage: "Get Movie Likes list",
 				},
@@ -324,7 +328,7 @@ func main() {
 				return err
 			},
 		},
-		cli.Command{
+		{
 			Name:        "note",
 			Usage:       "nt",
 			UsageText:   "nt text",
@@ -345,7 +349,7 @@ func main() {
 				return err
 			},
 		},
-		cli.Command{
+		{
 			Name:        "torrent",
 			Usage:       "trrnt",
 			UsageText:   "trrnt text",
@@ -366,7 +370,7 @@ func main() {
 				return err
 			},
 		},
-		cli.Command{
+		{
 			Name:        "update",
 			Usage:       "updt",
 			UsageText:   "updt text",
@@ -389,17 +393,17 @@ func main() {
 		},
 	}
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "nobanner, q",
 			Usage: "Usage q",
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "nocolor, x",
 			Usage: "Usage x",
 		},
 	}
 	app.Action = func(c *cli.Context) error {
-		if len(c.Args()) == 0 {
+		if c.NArg() == 0 {
 			cli.ShowAppHelpAndExit(c, 1)
 		}
 
