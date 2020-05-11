@@ -34,7 +34,7 @@ before_install:
       brew update
     fi
   - go version
-  - go get -v .
+  - go get
 
 install:
   - echo "install start"
