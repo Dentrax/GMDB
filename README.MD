@@ -138,7 +138,7 @@ $ ./GMDB update
 
 Simply just build from remote URL:
 ```
-$ go build -o ./GMDB github.com/Dentrax/GMDB
+$ go get -u github.com/Dentrax/GMDB; go build -o ./GMDB github.com/Dentrax/GMDB
 ```
 
 or
@@ -166,6 +166,13 @@ $ go build .
 3. Install the GMDB with following command
 ```
 $ go install .
+```
+
+*Install the dependencies:*
+```
+$ brew cask install mpv
+$ brew install youtube-dl
+$ npm install -g peerflix
 ```
 
 ## Configuration
