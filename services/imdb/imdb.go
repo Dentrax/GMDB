@@ -14,7 +14,7 @@ import (
 	"github.com/Dentrax/GMDB/pkg/cache"
 	"github.com/Dentrax/GMDB/services/common"
 
-	"github.com/puerkitobio/goquery"
+	"github.com/PuerkitoBio/goquery"
 )
 
 type IMDB struct {

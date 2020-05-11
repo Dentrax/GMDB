@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Dentrax/GMDB/pkg/utils"
 	"log"
 	"os"
 	"os/exec"
@@ -32,7 +33,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/ttacon/chalk"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var DefaultSpinner *spinner.Spinner
@@ -40,6 +41,9 @@ var DefaultSpinner *spinner.Spinner
 var DefaultPrinter *services.Printer
 
 var Config *config.Config
+
+var styleRed = chalk.Red.NewStyle().WithBackground(chalk.ResetColor).WithTextStyle(chalk.Bold)
+var styleBlue = chalk.Blue.NewStyle().WithBackground(chalk.ResetColor).WithTextStyle(chalk.Bold)
 
 type App struct {
 	Config *config.Config
@@ -109,10 +113,6 @@ func WaitInputIntFromCLI() int {
 
 //Write an Ask(Y/N) question and wait an input
 func AskYNQuestion(question string, tries int, defaultInput bool, red bool) bool {
-	styleRed := chalk.Red.NewStyle().
-		WithBackground(chalk.ResetColor).
-		WithTextStyle(chalk.Bold)
-
 	for ; tries > 0; tries-- {
 		if defaultInput {
 			if red {
@@ -524,7 +524,7 @@ func (a *App) HandleMyListRequest(c *cli.Context) {
 
 func (a *App) HandleLearnRequest(c *cli.Context) {
 	request := new(models.LearnRequest)
-	request.Filename = strings.Join(c.Args().Slice(), " ")
+	request.Filename = utils.GetArgString(c.Args())
 
 	DefaultPrinter = services.NewLearnPrinter(UseNoResultFilter(), *request)
 
@@ -591,7 +591,7 @@ func (a *App) HandleTorrentRequest(c *cli.Context, movie *models.MovieInfo) {
 	request := new(models.SearchTorrentRequest)
 
 	if c != nil && movie == nil {
-		request.Title = strings.Join(c.Args().Slice(), "+")
+		request.Title = utils.GetArgString(c.Args())
 
 		DefaultPrinter = services.NewTorrentPrinter(UseNoResultFilter(), *request)
 
@@ -692,7 +692,7 @@ func (a *App) HandleTorrentRequest(c *cli.Context, movie *models.MovieInfo) {
 //FIXME: Too long and hardcoded function, make it better
 func (a *App) HandleSearchTitleRequest(c *cli.Context) {
 	searchRequest := new(models.SearchRequest)
-	searchRequest.Title = strings.Join(c.Args().Slice(), "+")
+	searchRequest.Title = utils.GetArgString(c.Args())
 
 	if c.Bool("all") {
 		searchRequest.ScanRT = true
@@ -833,18 +833,27 @@ func HandleWatchMovie(url string) bool {
 	watch := AskYNQuestion("Do you want to watch Trailer?", 3, true, false)
 
 	if watch {
+
+		path, installed := utils.IsInstalledCMD("mpv")
+
+		if !installed {
+			fmt.Printf("\n%s%s%s", styleRed, "MPV is required to play video! You can get here: ", chalk.Reset)
+			fmt.Printf("%s%s%s\n", styleBlue, "https://github.com/mpv-player/mpv", chalk.Reset)
+			os.Exit(127)
+		}
+
 		fmt.Printf("MPV Player loading...: %s", url)
 
-		//TODO: Windows?
-		cmd := exec.Command("/usr/bin/mpv", url)
+		cmd := exec.Command("mpv", url)
+		cmd.Dir = path
 
-		if err := cmd.Start(); err != nil {
-			fmt.Printf("Failed to start cmd: %v", err)
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("\n%s%s: %v%s\n", styleRed, "Failed to run MPV", err, chalk.Reset)
 			return false
 		}
 
 		if err := cmd.Wait(); err != nil {
-			fmt.Printf("Cmd returned error: %v", err)
+			fmt.Printf("\n%s%s: %v%s\n", styleRed, "MPV returned an error", err, chalk.Reset)
 			return false
 		}
 	}
@@ -856,19 +865,28 @@ func HandleWatchTorrentMagnet(magnet string) bool {
 	watch := AskYNQuestion("Do you want to watch Movie using Peerflix?", 3, true, false)
 
 	if watch {
+		path, installed := utils.IsInstalledCMD("peerflix")
+
+		if !installed {
+			fmt.Printf("\n%s%s%s", styleRed, "Peerflix is required to steam magnet! You can get here: ", chalk.Reset)
+			fmt.Printf("%s%s%s\n", styleBlue, "https://github.com/mafintosh/peerflix", chalk.Reset)
+			os.Exit(127)
+		}
+
 		rgxMagnet, _ := regexp.Compile("magnet:\\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]{32,40}")
 		fmt.Println()
 		fmt.Printf("Peerflix: (MPV) Player loading...: %s", rgxMagnet.FindString(magnet))
 
-		cmd := exec.Command("/usr/bin/peerflix", "--mpv", magnet)
+		cmd := exec.Command("peerflix", "--mpv", magnet)
+		cmd.Dir = path
 
-		if err := cmd.Start(); err != nil {
-			fmt.Printf("Failed to start cmd: %v", err)
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("\n%s%s: %v%s\n", styleRed, "Failed to run Peerflix", err, chalk.Reset)
 			return false
 		}
 
 		if err := cmd.Wait(); err != nil {
-			fmt.Printf("Cmd returned error: %v", err)
+			fmt.Printf("\n%s%s: %v%s\n", styleRed, "Peerflix returned an error", err, chalk.Reset)
 			return false
 		}
 	}

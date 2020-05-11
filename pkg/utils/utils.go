@@ -7,6 +7,17 @@
 
 package utils
 
+import (
+	"github.com/urfave/cli/v2"
+	"os"
+	"regexp"
+	"strings"
+)
+
+//https://stackoverflow.com/a/37293398/5685796
+var rgxLeadClose = regexp.MustCompile(`^[\s\p{Zs}]+|[\s\p{Zs}]+$`)
+var rgxInside = regexp.MustCompile(`[\s\p{Zs}]{2,}`)
+
 // IsContains returns True if given slice contains given string item.
 // Otherwise, returns False.
 func IsContains(slice []string, item string) bool {
@@ -17,4 +28,33 @@ func IsContains(slice []string, item string) bool {
 
 	_, ok := set[item]
 	return ok
+}
+
+func GetArgString(args cli.Args) string {
+	return TrimSliceString(args.Slice())
+}
+
+func TrimSliceString(str []string) string {
+	final := rgxLeadClose.ReplaceAllString(strings.Join(str, " "), "")
+	final = rgxInside.ReplaceAllString(final, " ")
+	final = strings.Replace(final, " ", "+", -1)
+	return final
+}
+
+func IsInstalledCMD(cmd string) (string, bool) {
+	paths := []string{"/usr/bin/", "/usr/local/bin/"}
+	for i := 0; i < len(paths); i++ {
+		if fileExists(paths[i] + cmd) {
+			return paths[i], true
+		}
+	}
+	return "", false
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

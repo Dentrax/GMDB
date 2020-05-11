@@ -15,7 +15,7 @@ import (
 	"github.com/Dentrax/GMDB/models"
 
 	"github.com/middelink/go-parse-torrent-name"
-	"github.com/puerkitobio/goquery"
+	"github.com/PuerkitoBio/goquery"
 )
 
 func FixSpace(input string) string {

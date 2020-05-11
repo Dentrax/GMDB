@@ -17,7 +17,7 @@ import (
 	"github.com/Dentrax/GMDB/pkg/config"
 	"github.com/Dentrax/GMDB/services"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var DefaultPrinter *services.Printer

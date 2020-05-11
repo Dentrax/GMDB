@@ -16,7 +16,7 @@ import (
 
 	"github.com/Dentrax/GMDB/models"
 
-	"github.com/puerkitobio/goquery"
+	"github.com/PuerkitoBio/goquery"
 )
 
 func check(err error) {

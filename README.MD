@@ -134,6 +134,13 @@ $ ./GMDB update
 
 ## Installation
 
+Simply just build from remote URL:
+```
+$ go build -o ./GMDB github.com/Dentrax/GMDB
+```
+
+or
+
 1. Clone the project to your computer and navigate to folder by executing the following command:
 ```
 $ git clone https://github.com/Dentrax/GMDB.git && cd ./GMDB/
@@ -146,7 +153,7 @@ $ go test -v -cover -race ./...
 
 * Run this command to get required packages before build & install
 ```
-$ go get -d ./...
+$ go get -v ./...
 ```
 
 2. Build the all project using this command

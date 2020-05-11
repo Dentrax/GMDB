@@ -8,13 +8,13 @@
 package torrent
 
 import (
+	services "github.com/Dentrax/GMDB/services/common"
 	"log"
 
 	"github.com/Dentrax/GMDB/models"
-	"github.com/Dentrax/GMDB/services/common"
 	"github.com/Dentrax/GMDB/services/torrent/torrent1337x"
 
-	"github.com/puerkitobio/goquery"
+	"github.com/PuerkitoBio/goquery"
 )
 
 type Torrent struct {

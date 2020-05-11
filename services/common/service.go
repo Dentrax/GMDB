@@ -16,7 +16,7 @@ import (
 	"github.com/Dentrax/GMDB/pkg/cache"
 	"github.com/Dentrax/GMDB/pkg/config"
 
-	"github.com/puerkitobio/goquery"
+	"github.com/PuerkitoBio/goquery"
 )
 
 func GetDocumentFile(service string, rootName string, title string, url string) *goquery.Document {

@@ -13,7 +13,7 @@ import (
 	"github.com/Dentrax/GMDB/models"
 	"github.com/Dentrax/GMDB/services/common"
 
-	"github.com/puerkitobio/goquery"
+	"github.com/PuerkitoBio/goquery"
 )
 
 type RottenTomatoes struct {

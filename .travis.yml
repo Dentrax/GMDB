@@ -13,6 +13,9 @@ addons:
 go:
   - 1.10.x
   - 1.11.x
+  - 1.12.x
+  - 1.13.x
+  - 1.14.2
   - master
   - tip
 
@@ -31,17 +34,7 @@ before_install:
       brew update
     fi
   - go version
-  - go get -u -v github.com/smartystreets/goconvey
-  - go get -u -v golang.org/x/tools/cmd/cover
-  - go get -u -v github.com/mattn/go-sqlite3
-  - go get -u -v github.com/go-ini/ini
-  - go get -u -v github.com/smartystreets/goconvey
-  - go get -u -v github.com/puerkitobio/goquery
-  - go get -u -v github.com/briandowns/spinner
-  - go get -u -v github.com/ttacon/chalk
-  - go get -u -v github.com/middelink/go-parse-torrent-name
-  - go get -u -v github.com/jmoiron/sqlx
-  - go get -u -v github.com/urfave/cli
+  - go get -v .
 
 install:
   - echo "install start"
