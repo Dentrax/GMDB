@@ -25,14 +25,14 @@ var DefaultPrinter *services.Printer
 func main() {
 	app := &cli.App{}
 	app.Name = "GMDB"
-	app.Version = "Alpha v0.0.0"
+	app.Version = "Alpha v0.1.0"
 	app.Compiled = time.Now()
 	app.Authors = []*cli.Author{
 		&cli.Author{
 			Name:  "Furkan Turkal",
 		},
 	}
-	app.Copyright = "(c) 2019 - Dentrax"
+	app.Copyright = "(c) 2020 - Dentrax"
 	app.Usage = "gmdb"
 	app.ArgsUsage = "[args and such]"
 	app.HideHelp = false
@@ -40,7 +40,7 @@ func main() {
 	app.Commands = []*cli.Command{
 		{
 			Name:        "search",
-			Usage:       "usg",
+			Usage:       "Do Search!",
 			UsageText:   "usg text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
@@ -216,7 +216,7 @@ func main() {
 					}
 				}
 				if c.NArg() > 0 {
-					config, err := config.LoadConfig()
+					config, err := config.LoadConfig(c.String("config"))
 					if err != nil {
 						return cli.NewExitError("Failed to load config", 1)
 					}
@@ -235,13 +235,13 @@ func main() {
 		},
 		{
 			Name:        "learn",
-			Usage:       "usg",
+			Usage:       "Learn and store your Netflix data",
 			UsageText:   "usg text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
 			Action: func(c *cli.Context) error {
 				if c.NArg() > 0 {
-					config, err := config.LoadConfig()
+					config, err := config.LoadConfig(c.String("config"))
 					if err != nil {
 						return cli.NewExitError("Failed to load config", 1)
 					}
@@ -260,7 +260,7 @@ func main() {
 		},
 		{
 			Name:        "history",
-			Usage:       "hst",
+			Usage:       "See the search history",
 			UsageText:   "hst text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
@@ -279,7 +279,7 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				config, err := config.LoadConfig()
+				config, err := config.LoadConfig(c.String("config"))
 				if err != nil {
 					return cli.NewExitError("Failed to load config", 1)
 				}
@@ -295,7 +295,7 @@ func main() {
 		},
 		{
 			Name:        "list",
-			Usage:       "lst",
+			Usage:       "List your movies and watch laters",
 			UsageText:   "lst text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
@@ -314,7 +314,7 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				config, err := config.LoadConfig()
+				config, err := config.LoadConfig(c.String("config"))
 				if err != nil {
 					return cli.NewExitError("Failed to load config", 1)
 				}
@@ -330,12 +330,12 @@ func main() {
 		},
 		{
 			Name:        "note",
-			Usage:       "nt",
+			Usage:       "Write a note for a movie",
 			UsageText:   "nt text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
 			Action: func(c *cli.Context) error {
-				config, err := config.LoadConfig()
+				config, err := config.LoadConfig(c.String("config"))
 				if err != nil {
 					return cli.NewExitError("Failed to load config", 1)
 				}
@@ -351,12 +351,12 @@ func main() {
 		},
 		{
 			Name:        "torrent",
-			Usage:       "trrnt",
+			Usage:       "Search on Torrent",
 			UsageText:   "trrnt text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
 			Action: func(c *cli.Context) error {
-				config, err := config.LoadConfig()
+				config, err := config.LoadConfig(c.String("config"))
 				if err != nil {
 					return cli.NewExitError("Failed to load config", 1)
 				}
@@ -372,12 +372,12 @@ func main() {
 		},
 		{
 			Name:        "update",
-			Usage:       "updt",
+			Usage:       "Update your stored database",
 			UsageText:   "updt text",
 			Description: "desc",
 			ArgsUsage:   "[arg]",
 			Action: func(c *cli.Context) error {
-				config, err := config.LoadConfig()
+				config, err := config.LoadConfig(c.String("config"))
 				if err != nil {
 					return cli.NewExitError("Failed to load config", 1)
 				}
@@ -395,11 +395,15 @@ func main() {
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:  "nobanner, q",
-			Usage: "Usage q",
+			Usage: "Do not print the banner",
 		},
 		&cli.StringFlag{
 			Name:  "nocolor, x",
-			Usage: "Usage x",
+			Usage: "Do not use color",
+		},
+		&cli.StringFlag{
+			Name:  "config, c",
+			Usage: "Use custom config path",
 		},
 	}
 	app.Action = func(c *cli.Context) error {

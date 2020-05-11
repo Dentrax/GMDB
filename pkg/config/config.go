@@ -9,6 +9,8 @@ package config
 
 import (
 	"fmt"
+	"github.com/Dentrax/GMDB/pkg/utils"
+	"os"
 
 	"github.com/go-ini/ini"
 )
@@ -37,8 +39,29 @@ type Config struct {
 	Cache *CacheConfig
 }
 
-func LoadConfig() (*Config, error) {
-	path := "config/gmdb.conf"
+func LoadConfig(path string) (*Config, error) {
+	if len(path) == 0 {
+		return &Config{
+			App: &AppConfig{
+				LogSavePath: "./",
+				LogSaveName: "log",
+				LogFileExt:  ".log",
+				TimeFormat:  "date",
+			},
+			Cache: &CacheConfig{
+				UseCache:        false,
+				UseSearchCache:  false,
+				UseMovieCache:   false,
+				UseTrailerCache: false,
+			},
+		}, nil
+	}
+
+	if !utils.IsFileExists(path) {
+		fmt.Printf("Config file does not exist given path: %s",path)
+		os.Exit(1)
+	}
+
 	cfg, err := ini.Load(path)
 
 	if err != nil {

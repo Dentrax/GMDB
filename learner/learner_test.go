@@ -90,7 +90,5 @@ func TestNetflixParseMovies(t *testing.T) {
 				So(data.WatchDate, ShouldEqual, movies[i].Result.WatchDate)
 			})
 		}
-
 	})
-
 }

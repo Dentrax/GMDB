@@ -8,5 +8,5 @@
 package gmdb
 
 const (
-	PATH_CONFIG_FILE = "config/config"
+	PATH_CONFIG_FILE = "./config"
 )

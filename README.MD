@@ -22,6 +22,8 @@
 
 [Installation](#installation)
 
+[Configuration](#configuration)
+
 [Requirements](#requirements)
 
 [Dependencies](#dependencies)
@@ -166,6 +168,31 @@ $ go build .
 $ go install .
 ```
 
+## Configuration
+
+You can use custom file with `config` arg:
+```
+$ ./GMDB --config=/path/to/config search movie to search
+```
+
+Default config path is: `./config.ini`
+
+Example `config.ini` file:
+
+```ini
+[log]
+path = /path/to/log
+name = my-movie-logger
+ext = .log
+format = date
+
+[cache]
+use-cache=false
+search-cache=true
+movie-cache=true
+trailer-cache=true
+```
+
 ## Known Issues
 
 * `--no-color` argument option not working for every situation
@@ -188,7 +215,9 @@ $ go install .
 
 - [ ] Add Encrypt/Decrypt features to the database
 
-- [ ] Add Live tests for IMDB and RottenTomatoes
+- [X] Add Live tests for IMDB
+
+- [ ] Add Live tests for RottenTomatoes
 
 - [X] Add Live tests for 1337x torrent service
 
