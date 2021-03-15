@@ -16,5 +16,7 @@
 .DS_Store
 .idea
 
+vendor
+
 gmdb
 db

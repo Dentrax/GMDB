@@ -304,7 +304,7 @@ func (p *Printer) PrintMovie(movie models.Movie) {
 		p.printInfo("Tagline: ", strings.Join(movie.TL.Tags, ", "))
 	}
 	if p.Filter.Summaries && movie.PS.Total > 0 {
-		p.printInfo("Summaries: ", string(movie.PS.Total))
+		p.printInfo("Summaries: ", fmt.Sprint(movie.PS.Total))
 		for i := range movie.PS.Summaries {
 			fmt.Println()
 			p.printInfo(movie.PS.Summaries[i].Author, movie.PS.Summaries[i].Text)
